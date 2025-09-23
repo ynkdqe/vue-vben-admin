@@ -61,6 +61,10 @@ async function loadDayjsLocale(lang: SupportedLanguagesType) {
       locale = await import('dayjs/locale/zh-cn');
       break;
     }
+    case 'vi-VN': {
+      locale = await import('dayjs/locale/vi');
+      break;
+    }
     // 默认使用英语
     default: {
       locale = await import('dayjs/locale/en');
@@ -85,6 +89,10 @@ async function loadAntdLocale(lang: SupportedLanguagesType) {
     }
     case 'zh-CN': {
       antdLocale.value = antdDefaultLocale;
+      break;
+    }
+    case 'vi-VN': {
+      antdLocale.value = antdEnLocale; // Sử dụng tiếng Anh làm mặc định cho tiếng Việt
       break;
     }
   }

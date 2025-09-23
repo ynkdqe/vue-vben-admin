@@ -15,16 +15,20 @@ const authStore = useAuthStore();
 
 const MOCK_USER_OPTIONS: BasicOption[] = [
   {
-    label: 'Super',
-    value: 'vben',
+    label: 'Master Admin',
+    value: ' ',
   },
   {
-    label: 'Admin',
-    value: 'admin',
+    label: 'FRT',
+    value: 'FRT',
   },
   {
-    label: 'User',
-    value: 'jack',
+    label: 'Vinschool',
+    value: 'VSC',
+  },
+  {
+    label: 'F88',
+    value: 'F88',
   },
 ];
 
@@ -34,13 +38,13 @@ const formSchema = computed((): VbenFormSchema[] => {
       component: 'VbenSelect',
       componentProps: {
         options: MOCK_USER_OPTIONS,
-        placeholder: $t('authentication.selectAccount'),
+        placeholder: $t('authentication.selectTenant'),
       },
       fieldName: 'selectAccount',
-      label: $t('authentication.selectAccount'),
+      label: $t('authentication.selectTenant'),
       rules: z
         .string()
-        .min(1, { message: $t('authentication.selectAccount') })
+        .min(1, { message: $t('authentication.selectTenant') })
         .optional()
         .default('vben'),
     },
@@ -52,15 +56,15 @@ const formSchema = computed((): VbenFormSchema[] => {
       dependencies: {
         trigger(values, form) {
           if (values.selectAccount) {
-            const findUser = MOCK_USER_OPTIONS.find(
-              (item) => item.value === values.selectAccount,
-            );
-            if (findUser) {
-              form.setValues({
-                password: '123456',
-                username: findUser.value,
-              });
-            }
+            // const findUser = MOCK_USER_OPTIONS.find(
+            //   (item) => item.value === values.selectAccount,
+            // );
+            // if (findUser) {
+            //   form.setValues({
+            //     password: '123456',
+            //     username: findUser.value,
+            //   });
+            // }
           }
         },
         triggerFields: ['selectAccount'],
