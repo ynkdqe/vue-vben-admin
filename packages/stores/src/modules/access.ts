@@ -7,46 +7,19 @@ import { acceptHMRUpdate, defineStore } from 'pinia';
 type AccessToken = null | string;
 
 interface AccessState {
-  /**
-   * 可访问的菜单列表
-   */
   accessMenus: MenuRecordRaw[];
-  /**
-   * 可访问的路由列表
-   */
   accessRoutes: RouteRecordRaw[];
-  /**
-   * 登录 accessToken
-   */
   accessToken: AccessToken;
-  /**
-   * accessToken 过期时间戳
-   */
   expiresAt?: number;
-  /**
-   * 是否已经检查过权限
-   */
   isAccessChecked: boolean;
-  /**
-   * 是否锁屏状态
-   */
   isLockScreen: boolean;
-  /**
-   * 锁屏密码
-   */
   lockScreenPassword?: string;
-  /**
-   * 登录是否过期
-   */
   loginExpired: boolean;
-  /**
-   * 登录 refreshToken
-   */
   refreshToken: AccessToken;
 }
 
 /**
- * @zh_CN 访问权限相关
+ * @vi_VN Liên quan đến quyền truy cập
  */
 export const useAccessStore = defineStore('core-access', {
   actions: {
@@ -96,7 +69,7 @@ export const useAccessStore = defineStore('core-access', {
     },
   },
   persist: {
-    // 持久化
+    // Lưu trữ bền vững
     pick: [
       'accessToken',
       'refreshToken',
@@ -119,7 +92,7 @@ export const useAccessStore = defineStore('core-access', {
   }),
 });
 
-// 解决热更新问题
+// Giải quyết vấn đề hot update
 const hot = import.meta.hot;
 if (hot) {
   hot.accept(acceptHMRUpdate(useAccessStore, hot));
