@@ -42,9 +42,9 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /**
-   * 异步处理登录操作
+   * Asynchronous processing of login operations
    * Asynchronously handle the login process
-   * @param params 登录表单数据
+   * @param params Log in form data
    */
   async function authLogin(
     params: Recordable<any>,
@@ -96,7 +96,7 @@ export const useAuthStore = defineStore('auth', () => {
     resetAllStores();
     accessStore.setLoginExpired(false);
 
-    // 回登录页带上当前路由地址
+    // Return to the login page with the current routing address
     await router.replace({
       path: LOGIN_PATH,
       query: redirect

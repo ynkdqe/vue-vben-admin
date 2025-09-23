@@ -11,9 +11,9 @@ export const defaultResponseInterceptor = ({
   dataField = 'data',
   successCode = 0,
 }: {
-  /** 响应数据中代表访问结果的字段名 */
+  /**The field name in the response data that represents the access result */
   codeField: string;
-  /** 响应数据中装载实际数据的字段名，或者提供一个函数从响应数据中解析需要返回的数据 */
+  /** The field name of the response data that loads the actual data, or provide a function to parse the data that needs to be returned from the response data */
   dataField: ((response: any) => any) | string;
   /** 当codeField所指定的字段值与successCode相同时，代表接口访问成功。如果提供一个函数，则返回true代表接口访问成功 */
   successCode: ((code: any) => boolean) | number | string;
@@ -64,8 +64,8 @@ export const authenticateResponseInterceptor = ({
       if (response?.status !== 401) {
         throw error;
       }
-      // 判断是否启用了 refreshToken 功能
-      // 如果没有启用或者已经是重试请求了，直接跳转到重新登录
+      // Determine whether the refreshToken function is enabled
+      // If it is not enabled or it is already a retry request, jump to log in directly
       if (!enableRefreshToken || config.__isRetryRequest) {
         await doReAuthenticate();
         throw error;
