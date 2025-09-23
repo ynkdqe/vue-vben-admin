@@ -21,34 +21,31 @@ export const useAuthStore = defineStore('auth', () => {
   const loginLoading = ref(false);
 
   /**
-   * 异步处理登录操作
+   * Xử lý bất đồng bộ (async) thao tác đăng nhập
    * Asynchronously handle the login process
-   * @param params 登录表单数据
+   * @param params Dữ liệu biểu mẫu đăng nhập
    */
   async function authLogin(
     params: Recordable<any>,
     onSuccess?: () => Promise<void> | void,
   ) {
-    // 异步处理用户登录操作并获取 accessToken
+    // Xử lý bất đồng bộ thao tác đăng nhập của người dùng và lấy dữ liệu. accessToken
     let userInfo: null | UserInfo = null;
     try {
       loginLoading.value = true;
-      const { accessToken } = await loginApi(params);
+      const res = await loginApi(params);
+      // Nếu lấy được accessToken thành công
+      if (res.status === 200 && res.data) {
+        accessStore.setAccessToken(res.data.access_token);
 
-      // 如果成功获取到 accessToken
-      if (accessToken) {
-        accessStore.setAccessToken(accessToken);
-
-        // 获取用户信息并存储到 accessStore 中
-        const [fetchUserInfoResult, accessCodes] = await Promise.all([
-          fetchUserInfo(),
-          getAccessCodesApi(),
+        // Lấy thông tin người dùng và lưu vào trong accessStore.
+        const [fetchUserInfoResult] = await Promise.all([
+          fetchUserInfo()
         ]);
 
         userInfo = fetchUserInfoResult;
 
         userStore.setUserInfo(userInfo);
-        accessStore.setAccessCodes(accessCodes);
 
         if (accessStore.loginExpired) {
           accessStore.setLoginExpired(false);
@@ -60,9 +57,9 @@ export const useAuthStore = defineStore('auth', () => {
               );
         }
 
-        if (userInfo?.realName) {
+        if (userInfo?.name) {
           notification.success({
-            description: `${$t('authentication.loginSuccessDesc')}:${userInfo?.realName}`,
+            description: `${$t('authentication.loginSuccessDesc')}:${userInfo?.name}`,
             duration: 3,
             message: $t('authentication.loginSuccess'),
           });

@@ -38,7 +38,7 @@ export async function loginApi(data: AuthApi.LoginParams) {
     grant_type: data.grant_type || import.meta.env.VITE_APP_GRANT_TYPE,
   };
   // Sử dụng formRequestClient để gửi data dưới dạng x-www-form-urlencoded
-  return formRequestClient.post<AuthApi.LoginResult>('/connect/token', loginData);
+  return formRequestClient.post<any>('/connect/token', loginData);
 }
 
 /**

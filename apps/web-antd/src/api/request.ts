@@ -114,7 +114,7 @@ export const baseRequestClient = new RequestClient({ baseURL: apiURL });
 
 // Request client cho login API với form-urlencoded
 export const formRequestClient = createRequestClient(apiURL, {
-  responseReturn: 'data',
+  responseReturn: 'raw',
   headers: {
     'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
   },
@@ -124,7 +124,6 @@ export const formRequestClient = createRequestClient(apiURL, {
 formRequestClient.addRequestInterceptor({
   fulfilled: async (config) => {
     const accessStore = useAccessStore();
-
     // Set authorization header
     config.headers.Authorization = formatToken(accessStore.accessToken);
     config.headers['Accept-Language'] = preferences.app.locale;
