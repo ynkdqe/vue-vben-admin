@@ -5,7 +5,7 @@ export const LOGIN_PATH = '/auth/login';
 
 export interface LanguageOption {
   label: string;
-  value: 'en-US' | 'zh-CN' | 'vi-VN';
+  value: 'en-US' | 'vi-VN' | 'zh-CN';
 }
 
 /**

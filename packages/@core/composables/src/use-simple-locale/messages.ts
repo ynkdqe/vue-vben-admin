@@ -1,4 +1,4 @@
-export type Locale = 'en-US' | 'zh-CN' | 'vi-VN';
+export type Locale = 'en-US' | 'vi-VN' | 'zh-CN';
 
 export const messages: Record<Locale, Record<string, string>> = {
   'en-US': {

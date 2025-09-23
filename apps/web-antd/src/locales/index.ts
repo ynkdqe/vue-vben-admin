@@ -57,12 +57,12 @@ async function loadDayjsLocale(lang: SupportedLanguagesType) {
       locale = await import('dayjs/locale/en');
       break;
     }
-    case 'zh-CN': {
-      locale = await import('dayjs/locale/zh-cn');
-      break;
-    }
     case 'vi-VN': {
       locale = await import('dayjs/locale/vi');
+      break;
+    }
+    case 'zh-CN': {
+      locale = await import('dayjs/locale/zh-cn');
       break;
     }
     // 默认使用英语
@@ -87,12 +87,12 @@ async function loadAntdLocale(lang: SupportedLanguagesType) {
       antdLocale.value = antdEnLocale;
       break;
     }
-    case 'zh-CN': {
-      antdLocale.value = antdDefaultLocale;
-      break;
-    }
     case 'vi-VN': {
       antdLocale.value = antdEnLocale; // Sử dụng tiếng Anh làm mặc định cho tiếng Việt
+      break;
+    }
+    case 'zh-CN': {
+      antdLocale.value = antdDefaultLocale;
       break;
     }
   }
