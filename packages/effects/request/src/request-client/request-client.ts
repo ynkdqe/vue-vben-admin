@@ -51,6 +51,9 @@ class RequestClient {
   public requestSSE: SSE['requestSSE'];
   public upload: FileUploader['upload'];
 
+  // ✅ Thêm property responseReturn
+  private responseReturn: 'body' | 'data' | 'raw';
+
   /**
    * 构造函数，用于创建Axios实例
    * @param options - Axios请求配置，可选
@@ -67,6 +70,10 @@ class RequestClient {
     };
     const { ...axiosConfig } = options;
     const requestConfig = merge(axiosConfig, defaultConfig);
+
+    // ✅ Khởi tạo responseReturn
+    this.responseReturn = requestConfig.responseReturn || 'raw';
+
     requestConfig.paramsSerializer = getParamsSerializer(
       requestConfig.paramsSerializer,
     );
@@ -154,6 +161,14 @@ class RequestClient {
           ? { paramsSerializer: getParamsSerializer(config.paramsSerializer) }
           : {}),
       });
+
+      // ✅ Implement logic responseReturn
+      const responseReturn =
+        config.responseReturn || this.responseReturn || 'raw';
+      if (responseReturn === 'data') {
+        return response.data;
+      }
+      // Mặc định trả về raw response (giữ nguyên behavior hiện tại)
       return response as T;
     } catch (error: any) {
       throw error.response ? error.response.data : error;

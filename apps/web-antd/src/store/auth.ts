@@ -21,6 +21,27 @@ export const useAuthStore = defineStore('auth', () => {
   const loginLoading = ref(false);
 
   /**
+   * ✅ Kiểm tra token có hết hạn không
+   */
+  function isTokenExpired(): boolean {
+    const expiresAt = accessStore.expiresAt;
+    if (!expiresAt) return false;
+
+    return Math.floor(Date.now() / 1000) > expiresAt;
+  }
+
+  /**
+   * ✅ Lấy thời gian còn lại của token (giây)
+   */
+  function getTokenRemainingTime(): number {
+    const expiresAt = accessStore.expiresAt;
+    if (!expiresAt) return 0;
+
+    const remaining = expiresAt - Math.floor(Date.now() / 1000);
+    return Math.max(0, remaining);
+  }
+
+  /**
    * 异步处理登录操作
    * Asynchronously handle the login process
    * @param params 登录表单数据
@@ -33,8 +54,10 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       loginLoading.value = true;
       const loginResult = await loginApi(params);
-      if (loginResult.access_token) {
-        accessStore.setAccessToken(loginResult.access_token);
+      if (loginResult) {
+        // ✅ Lưu access_token, refresh_token và expiresAt (tính từ expires_in)
+        accessStore.setAccessToken(loginResult);
+
         userInfo = await fetchUserInfo();
         userStore.setUserInfo(userInfo);
         if (accessStore.loginExpired) {
@@ -47,9 +70,9 @@ export const useAuthStore = defineStore('auth', () => {
               );
         }
 
-        if (userInfo?.realName) {
+        if (userInfo?.name) {
           notification.success({
-            description: `${$t('authentication.loginSuccessDesc')}:${userInfo?.realName}`,
+            description: `${$t('authentication.loginSuccessDesc')}:${userInfo?.name}`,
             duration: 3,
             message: $t('authentication.loginSuccess'),
           });
@@ -99,6 +122,8 @@ export const useAuthStore = defineStore('auth', () => {
     $reset,
     authLogin,
     fetchUserInfo,
+    getTokenRemainingTime,
+    isTokenExpired,
     loginLoading,
     logout,
   };

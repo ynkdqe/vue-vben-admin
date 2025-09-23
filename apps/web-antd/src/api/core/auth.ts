@@ -24,8 +24,7 @@ export namespace AuthApi {
     status: number;
   }
 }
-// Lấy base URL từ environment
-const API_BASE_URL = import.meta.env.VITE_APP_URL_API;
+
 /**
  * Đăng nhập
  */
@@ -37,32 +36,41 @@ export async function loginApi(data: AuthApi.LoginParams) {
     scope: import.meta.env.VITE_APP_SCOPE,
     grant_type: import.meta.env.VITE_APP_GRANT_TYPE,
   };
-  return requestClient.post<AuthApi.LoginResult>(
-    `${API_BASE_URL}/connect/token`,
-    loginData,
-    {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      responseReturn: 'body',
+  return requestClient.post<AuthApi.LoginResult>('/connect/token', loginData, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
     },
-  );
+    responseReturn: 'body',
+  });
 }
 
 /**
  * 刷新accessToken
  */
 export async function refreshTokenApi() {
-  return baseRequestClient.post<AuthApi.RefreshTokenResult>('/connect/token', {
-    withCredentials: true,
-  });
+  const refreshData = {
+    client_id: import.meta.env.VITE_APP_CLIENT_ID,
+    client_secret: import.meta.env.VITE_APP_CLIENT_SECRET,
+    grant_type: 'refresh_token',
+  };
+
+  return baseRequestClient.post<AuthApi.RefreshTokenResult>(
+    '/connect/token',
+    refreshData,
+    {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      withCredentials: true,
+    },
+  );
 }
 
 /**
  * 退出登录
  */
 export async function logoutApi() {
-  return baseRequestClient.post('/auth/logout', {
+  return baseRequestClient.post('/connect/endsession', {
     withCredentials: true,
   });
 }
