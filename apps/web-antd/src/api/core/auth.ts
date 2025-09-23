@@ -5,6 +5,10 @@ export namespace AuthApi {
   export interface LoginParams {
     password?: string;
     username?: string;
+    client_id?: string;
+    client_secret?: string;
+    scope?: string;
+    grant_type?: string;
   }
 
   /** 登录接口返回值 */
@@ -22,7 +26,16 @@ export namespace AuthApi {
  * 登录
  */
 export async function loginApi(data: AuthApi.LoginParams) {
-  return requestClient.post<AuthApi.LoginResult>('/auth/login', data);
+  // Tự động thêm các params từ environment variables
+  const loginData = {
+    ...data,
+    client_id: data.client_id || import.meta.env.VITE_CLIENT_ID,
+    client_secret: data.client_secret || import.meta.env.VITE_CLIENT_SECRET,
+    scope: data.scope || import.meta.env.VITE_SCOPE,
+    grant_type: data.grant_type || import.meta.env.VITE_GRANT_TYPE,
+  };
+  
+  return requestClient.post<AuthApi.LoginResult>('/auth/login', loginData);
 }
 
 /**
