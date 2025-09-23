@@ -16,7 +16,7 @@ import Title from './auth-title.vue';
 interface Props {
   formSchema: VbenFormSchema[];
   /**
-   * @zh_CN 是否处于加载处理状态
+   * @zh_CN Có đang trong trạng thái xử lý tải (loading) hay không
    */
   loading?: boolean;
   /**

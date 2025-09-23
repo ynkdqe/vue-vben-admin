@@ -1,15 +1,22 @@
 import { baseRequestClient, requestClient } from '#/api/request';
 
 export namespace AuthApi {
-  /** 登录接口参数 */
+  /** Tham số của API đăng nhập */
   export interface LoginParams {
     password?: string;
     username?: string;
+    client_id?: string;
+    client_secret?: string;
+    scope?: string;
+    grant_type?: string;
   }
 
-  /** 登录接口返回值 */
+  /** Giá trị trả về của API đăng nhập */
   export interface LoginResult {
-    accessToken: string;
+    access_token: string;
+    refresh_token: string;
+    expires_in: number;
+    token_type: string;
   }
 
   export interface RefreshTokenResult {
@@ -17,19 +24,36 @@ export namespace AuthApi {
     status: number;
   }
 }
-
+// Lấy base URL từ environment
+const API_BASE_URL = import.meta.env.VITE_APP_URL_API;
 /**
- * 登录
+ * Đăng nhập
  */
 export async function loginApi(data: AuthApi.LoginParams) {
-  return requestClient.post<AuthApi.LoginResult>('/auth/login', data);
+  const loginData = {
+    ...data,
+    client_id: import.meta.env.VITE_APP_CLIENT_ID,
+    client_secret: import.meta.env.VITE_APP_CLIENT_SECRET,
+    scope: import.meta.env.VITE_APP_SCOPE,
+    grant_type: import.meta.env.VITE_APP_GRANT_TYPE,
+  };
+  return requestClient.post<AuthApi.LoginResult>(
+    `${API_BASE_URL}/connect/token`,
+    loginData,
+    {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      responseReturn: 'body',
+    },
+  );
 }
 
 /**
  * 刷新accessToken
  */
 export async function refreshTokenApi() {
-  return baseRequestClient.post<AuthApi.RefreshTokenResult>('/auth/refresh', {
+  return baseRequestClient.post<AuthApi.RefreshTokenResult>('/connect/token', {
     withCredentials: true,
   });
 }

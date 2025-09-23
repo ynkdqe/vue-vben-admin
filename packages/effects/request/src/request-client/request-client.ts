@@ -140,7 +140,7 @@ class RequestClient {
   }
 
   /**
-   * 通用的请求方法
+   * Phương thức yêu cầu chung
    */
   public async request<T>(
     url: string,
