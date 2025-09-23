@@ -1,4 +1,4 @@
-export type Locale = 'en-US' | 'zh-CN';
+export type Locale = 'en-US' | 'vi-VN' | 'zh-CN';
 
 export const messages: Record<Locale, Record<string, string>> = {
   'en-US': {
@@ -9,6 +9,15 @@ export const messages: Record<Locale, Record<string, string>> = {
     prompt: 'Prompt',
     reset: 'Reset',
     submit: 'Submit',
+  },
+  'vi-VN': {
+    cancel: 'Hủy',
+    collapse: 'Thu gọn',
+    confirm: 'Xác nhận',
+    expand: 'Mở rộng',
+    prompt: 'Thông báo',
+    reset: 'Đặt lại',
+    submit: 'Gửi',
   },
   'zh-CN': {
     cancel: '取消',
