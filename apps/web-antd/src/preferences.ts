@@ -12,5 +12,6 @@ export const overridesPreferences = defineOverridesPreferences({
     name: import.meta.env.VITE_APP_TITLE,
     locale: 'vi-VN',
     authPageLayout: 'panel-center', // Căn giữa form đăng nhập
+    enableRefreshToken: true, // Kích hoạt làm mới token
   },
 });

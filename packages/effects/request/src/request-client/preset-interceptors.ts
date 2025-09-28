@@ -57,10 +57,11 @@ export const authenticateResponseInterceptor = ({
   enableRefreshToken: boolean;
   formatToken: (token: string) => null | string;
 }): ResponseInterceptorConfig => {
+  debugger;
   return {
     rejected: async (error) => {
       const { config, response } = error;
-      // 如果不是 401 错误，直接抛出异常
+      // If it is not a 401 error, throw an exception directly
       if (response?.status !== 401) {
         throw error;
       }
@@ -70,7 +71,7 @@ export const authenticateResponseInterceptor = ({
         await doReAuthenticate();
         throw error;
       }
-      // 如果正在刷新 token，则将请求加入队列，等待刷新完成
+      // If the token is being refreshed, the request will be added to the queue, waiting for the refresh to complete
       if (client.isRefreshing) {
         return new Promise((resolve) => {
           client.refreshTokenQueue.push((newToken: string) => {
@@ -80,9 +81,9 @@ export const authenticateResponseInterceptor = ({
         });
       }
 
-      // 标记开始刷新 token
+      // Tags start refreshing tokens
       client.isRefreshing = true;
-      // 标记当前请求为重试请求，避免无限循环
+      // Mark the current request as a retry request, avoiding infinite loops
       config.__isRetryRequest = true;
 
       try {

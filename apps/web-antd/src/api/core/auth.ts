@@ -47,14 +47,15 @@ export async function loginApi(data: AuthApi.LoginParams) {
 /**
  * 刷新accessToken
  */
-export async function refreshTokenApi() {
+export async function refreshTokenApi(refreshToken: any) {
   const refreshData = {
     client_id: import.meta.env.VITE_APP_CLIENT_ID,
     client_secret: import.meta.env.VITE_APP_CLIENT_SECRET,
     grant_type: 'refresh_token',
+    refresh_token: refreshToken
   };
 
-  return baseRequestClient.post<AuthApi.RefreshTokenResult>(
+  return baseRequestClient.post<AuthApi.LoginResult>(
     '/connect/token',
     refreshData,
     {

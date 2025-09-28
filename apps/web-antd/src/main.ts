@@ -4,27 +4,27 @@ import { unmountGlobalLoading } from '@vben/utils';
 import { overridesPreferences } from './preferences';
 
 /**
- * 应用初始化完成之后再进行页面加载渲染
+ * After the application initialization is completed, the page loading and rendering is performed
  */
 async function initApplication() {
-  // name用于指定项目唯一标识
-  // 用于区分不同项目的偏好设置以及存储数据的key前缀以及其他一些需要隔离的数据
+  // name is used to specify the project's unique identity
+  // Used to distinguish between preferences of different projects and key prefixes for storing data and some other data that needs to be isolated
   const env = import.meta.env.PROD ? 'prod' : 'dev';
   const appVersion = import.meta.env.VITE_APP_VERSION;
   const namespace = `${import.meta.env.VITE_APP_NAMESPACE}-${appVersion}-${env}`;
 
-  // app偏好设置初始化
+  // App preferences initialization
   await initPreferences({
     namespace,
     overrides: overridesPreferences,
   });
 
-  // 启动应用并挂载
-  // vue应用主要逻辑及视图
+  // Start the application and mount it
+  // The main logic and views of vue applications
   const { bootstrap } = await import('./bootstrap');
   await bootstrap(namespace);
 
-  // 移除并销毁loading
+  // Remove and destroy loading
   unmountGlobalLoading();
 }
 

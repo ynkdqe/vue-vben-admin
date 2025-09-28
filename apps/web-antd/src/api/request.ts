@@ -28,7 +28,7 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   });
 
   /**
-   * 重新认证逻辑
+   * Reauthentication logic
    */
   async function doReAuthenticate() {
     console.warn('Access token or refresh token is invalid or expired. ');
@@ -46,14 +46,16 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   }
 
   /**
-   * 刷新token逻辑
+   * Refresh token logic
    */
   async function doRefreshToken() {
     const accessStore = useAccessStore();
-    const resp = await refreshTokenApi();
-    const newToken = resp.data;
-    accessStore.setAccessToken(newToken);
-    return newToken;
+    if (accessStore && accessStore.refreshToken) {
+      const resp = await refreshTokenApi(accessStore.refreshToken);
+      accessStore.setAccessToken(resp);
+      return resp.access_token;
+    }
+    return '';
   }
 
   function formatToken(token: null | string) {
@@ -79,6 +81,7 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
       successCode: 0,
     }),
   );
+console.log('preferences.app.enableRefreshToken', preferences.app.enableRefreshToken);
 
   // token过期的处理
   client.addResponseInterceptor(
@@ -86,7 +89,8 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
       client,
       doReAuthenticate,
       doRefreshToken,
-      enableRefreshToken: preferences.app.enableRefreshToken,
+      //enableRefreshToken: preferences.app.enableRefreshToken,
+      enableRefreshToken: true,
       formatToken,
     }),
   );
