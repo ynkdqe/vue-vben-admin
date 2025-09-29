@@ -52,7 +52,7 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
     const accessStore = useAccessStore();
     if (accessStore && accessStore.refreshToken) {
       const resp = await refreshTokenApi(accessStore.refreshToken);
-      accessStore.setAccessToken(resp);
+      accessStore.setAccessToken(resp.data);
       return resp.access_token;
     }
     return '';
@@ -81,7 +81,6 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
       successCode: 0,
     }),
   );
-console.log('preferences.app.enableRefreshToken', preferences.app.enableRefreshToken);
 
   // token过期的处理
   client.addResponseInterceptor(
@@ -89,7 +88,7 @@ console.log('preferences.app.enableRefreshToken', preferences.app.enableRefreshT
       client,
       doReAuthenticate,
       doRefreshToken,
-      //enableRefreshToken: preferences.app.enableRefreshToken,
+      // enableRefreshToken: preferences.app.enableRefreshToken,
       enableRefreshToken: true,
       formatToken,
     }),

@@ -11,11 +11,11 @@ export const defaultResponseInterceptor = ({
   dataField = 'data',
   successCode = 0,
 }: {
-  /**The field name in the response data that represents the access result */
+  /** The field name in the response data that represents the access result */
   codeField: string;
   /** The field name of the response data that loads the actual data, or provide a function to parse the data that needs to be returned from the response data */
   dataField: ((response: any) => any) | string;
-  /** 当codeField所指定的字段值与successCode相同时，代表接口访问成功。如果提供一个函数，则返回true代表接口访问成功 */
+  /** When the field value specified by codeField is the same as successCode, it means that the interface access is successful. If a function is provided, return true means that the interface access is successful */
   successCode: ((code: any) => boolean) | number | string;
 }): ResponseInterceptorConfig => {
   return {
@@ -57,7 +57,6 @@ export const authenticateResponseInterceptor = ({
   enableRefreshToken: boolean;
   formatToken: (token: string) => null | string;
 }): ResponseInterceptorConfig => {
-  debugger;
   return {
     rejected: async (error) => {
       const { config, response } = error;

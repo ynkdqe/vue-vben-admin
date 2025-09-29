@@ -52,19 +52,15 @@ export async function refreshTokenApi(refreshToken: any) {
     client_id: import.meta.env.VITE_APP_CLIENT_ID,
     client_secret: import.meta.env.VITE_APP_CLIENT_SECRET,
     grant_type: 'refresh_token',
-    refresh_token: refreshToken
+    refresh_token: refreshToken,
   };
 
-  return baseRequestClient.post<AuthApi.LoginResult>(
-    '/connect/token',
-    refreshData,
-    {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      withCredentials: true,
+  return baseRequestClient.post<any>('/connect/token', refreshData, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
     },
-  );
+    responseReturn: 'body',
+  });
 }
 
 /**
