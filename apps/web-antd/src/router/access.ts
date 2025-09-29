@@ -31,9 +31,9 @@ async function generateAccess(options: GenerateMenuAndRoutesOptions) {
       });
       return await getAllMenusApi();
     },
-    // 可以指定没有权限跳转403页面
+    // You can specify that you do not have permission to jump to page 403
     forbiddenComponent,
-    // 如果 route.meta.menuVisibleWithForbidden = true
+    // If route.meta.menuVisibleWithForbidden = true
     layoutMap,
     pageMap,
   });
