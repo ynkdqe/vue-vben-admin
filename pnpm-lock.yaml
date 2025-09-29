@@ -219,9 +219,6 @@ catalogs:
     echarts:
       specifier: ^5.6.0
       version: 5.6.0
-    element-plus:
-      specifier: ^2.10.2
-      version: 2.10.2
     eslint:
       specifier: ^9.30.1
       version: 9.30.1
@@ -303,9 +300,6 @@ catalogs:
     jsonwebtoken:
       specifier: ^9.0.2
       version: 9.0.2
-    lefthook:
-      specifier: ^1.11.14
-      version: 1.11.14
     lodash.clonedeep:
       specifier: ^4.5.0
       version: 4.5.0
@@ -324,9 +318,6 @@ catalogs:
     medium-zoom:
       specifier: ^1.1.0
       version: 1.1.0
-    naive-ui:
-      specifier: ^2.42.0
-      version: 2.42.0
     nitropack:
       specifier: ^2.11.13
       version: 2.11.13
@@ -453,9 +444,6 @@ catalogs:
     unbuild:
       specifier: ^3.6.1
       version: 3.6.1
-    unplugin-element-plus:
-      specifier: ^0.10.0
-      version: 0.10.0
     vee-validate:
       specifier: ^4.15.1
       version: 4.15.1
@@ -598,9 +586,6 @@ importers:
       is-ci:
         specifier: 'catalog:'
         version: 4.1.0
-      lefthook:
-        specifier: 'catalog:'
-        version: 1.11.14
       playwright:
         specifier: 'catalog:'
         version: 1.53.2
@@ -707,6 +692,9 @@ importers:
       pinia:
         specifier: ^3.0.3
         version: 3.0.3(typescript@5.8.3)(vue@3.5.17(typescript@5.8.3))
+      toad-scheduler:
+        specifier: ^3.1.0
+        version: 3.1.0
       vue:
         specifier: ^3.5.17
         version: 3.5.17(typescript@5.8.3)
@@ -6223,6 +6211,10 @@ packages:
     resolution: {integrity: sha512-p0SaNjrHOnQeR8/VnfGbmg9te2kfyYSQ7Sc/j/6DtPL3JQvKxmjO9TSjNFpujqV3vEYYBvNNvXSxzyksBWAx1Q==}
     engines: {node: '>=12.0.0'}
 
+  croner@8.1.2:
+    resolution: {integrity: sha512-ypfPFcAXHuAZRCzo3vJL6ltENzniTjwe/qsLleH1V2/7SRDjgvRQyrLmumFTLmjFax4IuSxfGXEn79fozXcJog==}
+    engines: {node: '>=18.0'}
+
   croner@9.1.0:
     resolution: {integrity: sha512-p9nwwR4qyT5W996vBZhdvBCnMhicY5ytZkR4D1Xj0wuTDEiMnjwR57Q3RXYY/s0EpX6Ay3vgIcfaR+ewGHsi+g==}
     engines: {node: '>=18.0'}
@@ -8243,60 +8235,6 @@ packages:
   lazystream@1.0.1:
     resolution: {integrity: sha512-b94GiNHQNy6JNTrt5w6zNyffMrNkXZb3KTkCZJb2V1xaEGCk093vkZ2jk3tpaeP33/OiXC+WvK9AxUebnf5nbw==}
     engines: {node: '>= 0.6.3'}
-
-  lefthook-darwin-arm64@1.11.14:
-    resolution: {integrity: sha512-YPbUK6kGytY5W6aNUrzK7Vod3ynLVvj5JQiBh0DjlxCHMgIQPpFkDfwQzGw1E8CySyC95HXO83En5Ule8umS7g==}
-    cpu: [arm64]
-    os: [darwin]
-
-  lefthook-darwin-x64@1.11.14:
-    resolution: {integrity: sha512-l9RhSBp1SHqLCjSGWoeeVWqKcTBOMW8v2CCYrUt5eb6sik7AjT6+Neqf3sClsXH7SjELjj43yjmg6loqPtfDgg==}
-    cpu: [x64]
-    os: [darwin]
-
-  lefthook-freebsd-arm64@1.11.14:
-    resolution: {integrity: sha512-oSdJKGGMohktFXC6faZCUt5afyHpDwWGIWAkHGgOXUVD/LiZDEn6U/8cQmKm1UAfBySuPTtfir0VeM04y6188g==}
-    cpu: [arm64]
-    os: [freebsd]
-
-  lefthook-freebsd-x64@1.11.14:
-    resolution: {integrity: sha512-gZdMWZwOtIhIPK3GPYac7JhXrxF188gkw65i6O7CedS/meDlK2vjBv5BUVLeD/satv4+jibEdV0h4Qqu/xIh2A==}
-    cpu: [x64]
-    os: [freebsd]
-
-  lefthook-linux-arm64@1.11.14:
-    resolution: {integrity: sha512-sZmqbTsGQFQw7gbfi9eIHFOxfcs66QfZYLRMh1DktODhyhRXB8RtI6KMeKCtPEGLhbK55/I4TprC8Qvj86UBgw==}
-    cpu: [arm64]
-    os: [linux]
-
-  lefthook-linux-x64@1.11.14:
-    resolution: {integrity: sha512-c+to1BRzFe419SNXAR6YpCBP8EVWxvUxlON3Z+efzmrHhdlhm7LvEoJcN4RQE4Gc2rJQJNe87OjsEZQkc4uQLg==}
-    cpu: [x64]
-    os: [linux]
-
-  lefthook-openbsd-arm64@1.11.14:
-    resolution: {integrity: sha512-fivG3D9G4ASRCTf3ecfz1WdnrHCW9pezaI8v1NVve8t6B2q0d0yeaje5dfhoAsAvwiFPRaMzka1Qaoyu8O8G9Q==}
-    cpu: [arm64]
-    os: [openbsd]
-
-  lefthook-openbsd-x64@1.11.14:
-    resolution: {integrity: sha512-vikmG0jf7JVKR3be6Wk3l1jtEdedEqk1BTdsaHFX1bj0qk0azcqlZ819Wt/IoyIYDzQCHKowZ6DuXsRjT+RXWA==}
-    cpu: [x64]
-    os: [openbsd]
-
-  lefthook-windows-arm64@1.11.14:
-    resolution: {integrity: sha512-5PoAJ9QKaqxJn1NWrhrhXpAROpl/dT7bGTo7VMj2ATO1cpRatbn6p+ssvc3tgeriFThowFb1D11Fg6OlFLi6UQ==}
-    cpu: [arm64]
-    os: [win32]
-
-  lefthook-windows-x64@1.11.14:
-    resolution: {integrity: sha512-kBeOPR0Aj5hQGxoBBntgz5/e/xaH5Vnzlq9lJjHW8sf23qu/JVUGg6ceCoicyVWJi+ZOBliTa8KzwCu+mgyJjw==}
-    cpu: [x64]
-    os: [win32]
-
-  lefthook@1.11.14:
-    resolution: {integrity: sha512-Dv91Lnu/0jLT5pCZE0IkEfrpTXUhyX9WG4upEMPkKPCl5aBgJdoqVw/hbh8drcVrC6y7k1PqsRmWSERmO57weQ==}
-    hasBin: true
 
   less@4.3.0:
     resolution: {integrity: sha512-X9RyH9fvemArzfdP8Pi3irr7lor2Ok4rOttDXBhlwDg+wKQsXOXgHWduAJE1EsF7JJx0w0bcO6BC6tCKKYnXKA==}
@@ -10812,6 +10750,9 @@ packages:
   to-regex-range@5.0.1:
     resolution: {integrity: sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ==}
     engines: {node: '>=8.0'}
+
+  toad-scheduler@3.1.0:
+    resolution: {integrity: sha512-ZTwsGMWyKTOokgTmIvjPIvkT3ZiPFgkAi8L0OLONOcSc/BUDPRzNMOfVWZzugIAxyntvY0Nzy1etNk+31Q4FXQ==}
 
   toidentifier@1.0.1:
     resolution: {integrity: sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==}
@@ -16652,6 +16593,8 @@ snapshots:
     dependencies:
       luxon: 3.6.1
 
+  croner@8.1.2: {}
+
   croner@9.1.0: {}
 
   cross-env@7.0.3:
@@ -18859,49 +18802,6 @@ snapshots:
   lazystream@1.0.1:
     dependencies:
       readable-stream: 2.3.8
-
-  lefthook-darwin-arm64@1.11.14:
-    optional: true
-
-  lefthook-darwin-x64@1.11.14:
-    optional: true
-
-  lefthook-freebsd-arm64@1.11.14:
-    optional: true
-
-  lefthook-freebsd-x64@1.11.14:
-    optional: true
-
-  lefthook-linux-arm64@1.11.14:
-    optional: true
-
-  lefthook-linux-x64@1.11.14:
-    optional: true
-
-  lefthook-openbsd-arm64@1.11.14:
-    optional: true
-
-  lefthook-openbsd-x64@1.11.14:
-    optional: true
-
-  lefthook-windows-arm64@1.11.14:
-    optional: true
-
-  lefthook-windows-x64@1.11.14:
-    optional: true
-
-  lefthook@1.11.14:
-    optionalDependencies:
-      lefthook-darwin-arm64: 1.11.14
-      lefthook-darwin-x64: 1.11.14
-      lefthook-freebsd-arm64: 1.11.14
-      lefthook-freebsd-x64: 1.11.14
-      lefthook-linux-arm64: 1.11.14
-      lefthook-linux-x64: 1.11.14
-      lefthook-openbsd-arm64: 1.11.14
-      lefthook-openbsd-x64: 1.11.14
-      lefthook-windows-arm64: 1.11.14
-      lefthook-windows-x64: 1.11.14
 
   less@4.3.0:
     dependencies:
@@ -21659,6 +21559,10 @@ snapshots:
   to-regex-range@5.0.1:
     dependencies:
       is-number: 7.0.0
+
+  toad-scheduler@3.1.0:
+    dependencies:
+      croner: 8.1.2
 
   toidentifier@1.0.1: {}
 
