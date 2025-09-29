@@ -88,14 +88,14 @@ export const authenticateResponseInterceptor = ({
       try {
         const newToken = await doRefreshToken();
 
-        // 处理队列中的请求
+        //Handle requests in the queue
         client.refreshTokenQueue.forEach((callback) => callback(newToken));
-        // 清空队列
+        //Clear the queue
         client.refreshTokenQueue = [];
 
         return client.request(error.config.url, { ...error.config });
       } catch (refreshError) {
-        // 如果刷新 token 失败，处理错误（如强制登出或跳转登录页面）
+        // If refreshing token fails, an error will be handled (such as forced logout or jump to the login page)
         client.refreshTokenQueue.forEach((callback) => callback(''));
         client.refreshTokenQueue = [];
         console.error('Refresh token failed, please login again.');

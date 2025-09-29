@@ -62,27 +62,39 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
     return token ? `Bearer ${token}` : null;
   }
 
-  // 请求头处理
+  // Request header processing
   client.addRequestInterceptor({
     fulfilled: async (config) => {
       const accessStore = useAccessStore();
-
       config.headers.Authorization = formatToken(accessStore.accessToken);
       config.headers['Accept-Language'] = preferences.app.locale;
       return config;
     },
   });
 
-  // 处理返回的响应数据格式
+  // Process the returned response data format: adapt to the default response of the backend
+  // Backend response example：
+  // {
+  //   current: number,
+  //   pageSize: number,
+  //   total: number,
+  //   success: boolean,
+  //   data: any,
+  //   message: string,
+  //   dataExtend: any
+  // }
   client.addResponseInterceptor(
     defaultResponseInterceptor({
-      codeField: 'code',
+      // Switch code judgment to read success field
+      codeField: 'success',
+      // The field that needs to be returned is still data (data can be an object or an array)
       dataField: 'data',
-      successCode: 0,
+      // success === true is considered successful
+      successCode: (val: any) => val === true,
     }),
   );
 
-  // token过期的处理
+  //Processing of expired token
   client.addResponseInterceptor(
     authenticateResponseInterceptor({
       client,
@@ -94,14 +106,14 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
     }),
   );
 
-  // 通用的错误处理,如果没有进入上面的错误处理逻辑，就会进入这里
+  // General error handling, if the error handling logic above is not entered, it will enter here.
   client.addResponseInterceptor(
     errorMessageResponseInterceptor((msg: string, error) => {
-      // 这里可以根据业务进行定制,你可以拿到 error 内的信息进行定制化处理，根据不同的 code 做不同的提示，而不是直接使用 message.error 提示 msg
-      // 当前mock接口返回的错误字段是 error 或者 message
+     //Here you can customize according to the business. You can get the information in the error for customization and make different prompts according to different codes, instead of using message.error prompt msg
+      //The error field returned by the current mock interface is error or message
       const responseData = error?.response?.data ?? {};
       const errorMessage = responseData?.error ?? responseData?.message ?? '';
-      // 如果没有错误信息，则会根据状态码进行提示
+      // If there is no error message, it will be prompted according to the status code
       message.error(errorMessage || msg);
     }),
   );

@@ -45,11 +45,23 @@ function normalizeListResponse(res: any): EmployeeListResult {
   // - { items: Employee[], total: number }
   // - { data: { items: Employee[], total } }
   // - { data: Employee[], total?: number }
+  // - { current, pageSize, total, success, data, message, dataExtend }
   if (Array.isArray(res)) {
     return { items: res, total: res.length };
   }
 
   const data = res?.data ?? res;
+  // Envelope with data as list
+  if (Array.isArray(res?.data) && typeof res?.total !== 'undefined') {
+    return { items: res.data, total: Number(res.total ?? res.data.length) };
+  }
+  // Envelope where data contains items
+  if (Array.isArray(res?.data?.items)) {
+    return {
+      items: res.data.items,
+      total: Number(res.data.total ?? res.total ?? res.data.items.length),
+    };
+  }
   if (Array.isArray(data)) {
     return { items: data, total: Number(res?.total ?? data.length) };
   }
@@ -69,8 +81,15 @@ function normalizeListResponse(res: any): EmployeeListResult {
 export async function fetchEmployeeList(params: EmployeeQuery = {}) {
   // Pass query params as-is; backend should handle keyword/status/page/pageSize
   // Use responseReturn: 'body' to bypass code/data interceptor assumptions
+  const { page, pageSize, keyword, status } = params;
+  const query = {
+    current: (params as any).current ?? page,
+    pageSize,
+    keyword,
+    status,
+  } as Record<string, any>;
   const res = await requestClient.get<any>('/api/hrms/employee', {
-    params,
+    params: query,
     responseReturn: 'body',
   });
   return normalizeListResponse(res);
