@@ -9,6 +9,7 @@ export namespace AuthApi {
     client_secret?: string;
     scope?: string;
     grant_type?: string;
+    tenant?: string;
   }
 
   /** Giá trị trả về của API đăng nhập */
@@ -39,6 +40,7 @@ export async function loginApi(data: AuthApi.LoginParams) {
   return requestClient.post<AuthApi.LoginResult>('/connect/token', loginData, {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
+      'X-Tenant-ID': data.tenant || '',
     },
     responseReturn: 'body',
   });

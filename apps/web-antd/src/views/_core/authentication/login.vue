@@ -47,6 +47,7 @@ const formSchema = computed((): VbenFormSchema[] => {
             form.setValues({
               password: '1q2w3E*',
               username: 'admin',
+              tenant: values.tenant,
             });
           }
         },

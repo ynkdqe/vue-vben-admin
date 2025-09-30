@@ -3,6 +3,7 @@ import { onMounted, reactive, ref, watch } from 'vue';
 import { message, Form as AForm, Input as AInput, Select as ASelect, Table as ATable, Space as ASpace, Button as AButton } from 'ant-design-vue';
 import type { TableColumnsType } from 'ant-design-vue';
 import { fetchEmployeeList, type Employee, type EmployeeListResult } from '#/api/core';
+import dayjs from 'dayjs';
 
 // Search form state
 const query = reactive({
@@ -16,33 +17,42 @@ const query = reactive({
 const loading = ref(false);
 const dataSource = ref<Employee[]>([]);
 const total = ref(0);
-
+function formatDMY(val?: string | number | Date | null) {
+  if (!val) return '';
+  const d = dayjs(val);
+  return d.isValid() ? d.format('DD-MM-YYYY') : '';
+}
 const columns: TableColumnsType = [
-  { title: 'ID', dataIndex: 'id', key: 'id', width: 100, fixed: 'left' },
-  { title: 'Username', dataIndex: 'username', key: 'username', width: 140 },
+  { title: '#', dataIndex: 'id', key: 'id', width: 100, fixed: 'left' },
+  { title: 'Username', dataIndex: 'userName', key: 'username', width: 140 },
   { title: 'Mã NV', dataIndex: 'employeeCode', key: 'employeeCode', width: 120 },
   { title: 'Tên', dataIndex: 'name', key: 'name', width: 160 },
   { title: 'Điện thoại', dataIndex: 'phone', key: 'phone', width: 140 },
   { title: 'Email', dataIndex: 'email', key: 'email', width: 200 },
   { title: 'Trạng thái', dataIndex: 'status', key: 'status', width: 120 },
-  { title: 'Ngày sinh', dataIndex: 'dateOfBirth', key: 'dateOfBirth', width: 140 },
-  { title: 'Ngày vào làm', dataIndex: 'joinDate', key: 'joinDate', width: 140 },
-  { title: 'Ngày nghỉ việc', dataIndex: 'leaveDate', key: 'leaveDate', width: 140 },
+  {
+    title: 'Ngày sinh', 
+    dataIndex: 'birthDate', 
+    key: 'birthDate', 
+    width: 140,
+    customRender: ({ text }) => formatDMY(text),
+  },
+  {
+    title: 'Ngày vào làm', 
+    dataIndex: 'enrollDate', 
+    key: 'joinDate', 
+    width: 140,
+    customRender: ({ text }) => formatDMY(text),
+  },
+  {
+    title: 'Ngày nghỉ việc',
+    dataIndex: 'resignationDate',
+    key: 'leaveDate',
+    width: 140,
+    customRender: ({ text }) => formatDMY(text), 
+  },
   { title: 'Địa chỉ', dataIndex: 'address', key: 'address', width: 220 },
 ];
-
-function normalizeRow(row: any): Employee {
-  // Map common backend aliases to our preferred keys
-  return {
-    ...row,
-    employeeCode: row.employeeCode ?? row.code ?? row.staffCode ?? row.empCode,
-    name: row.name ?? row.fullName ?? row.displayName,
-    phone: row.phone ?? row.phoneNumber,
-    dateOfBirth: row.dateOfBirth ?? row.dob ?? row.birthDate,
-    joinDate: row.joinDate ?? row.hireDate ?? row.startDate,
-    leaveDate: row.leaveDate ?? row.resignationDate ?? null,
-  } as Employee;
-}
 
 async function loadData() {
   loading.value = true;
@@ -53,7 +63,7 @@ async function loadData() {
       page: query.page,
       pageSize: query.pageSize,
     });
-    dataSource.value = (res.items || []).map(normalizeRow);
+    dataSource.value = res.items || [];
     total.value = res.total || res.items.length;
   } catch (err: any) {
     message.error(err?.message || 'Failed to load employees');
@@ -110,9 +120,16 @@ const ASelectOption = ASelect.Option;
             placeholder="Tất cả"
             style="width: 180px"
           >
-            <ASelectOption value="active">Đang làm</ASelectOption>
-            <ASelectOption value="inactive">Nghỉ việc</ASelectOption>
-            <ASelectOption value="probation">Thử việc</ASelectOption>
+            <ASelectOption value="Đang làm">Đang làm</ASelectOption>
+            <ASelectOption value="Nghỉ việc">Nghỉ việc</ASelectOption>
+            <ASelectOption value="Nghỉ phép năm">Nghỉ phép năm</ASelectOption>
+            <ASelectOption value="Nghỉ sinh con khối BO">Nghỉ sinh con khối BO</ASelectOption>
+            <ASelectOption value="Nghỉ ốm">Nghỉ ốm</ASelectOption>
+            <ASelectOption value="Nghỉ không lương">Nghỉ không lương</ASelectOption>
+            <ASelectOption value="Nghỉ chăm con">Nghỉ chăm con</ASelectOption>
+            <ASelectOption value="Nghỉ sinh con khối Shop">Nghỉ sinh con khối Shop</ASelectOption>
+            <ASelectOption value="Tạm khóa user">Tạm khóa user</ASelectOption>
+            <ASelectOption value="Luân chuyển nội bộ FRT">Luân chuyển nội bộ FRT</ASelectOption>
           </ASelect>
         </AFormItem>
 
