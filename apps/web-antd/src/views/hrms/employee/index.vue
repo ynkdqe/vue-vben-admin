@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { onMounted, reactive, ref, watch } from 'vue';
-import { message, Form as AForm, Input as AInput, Select as ASelect, Table as ATable, Space as ASpace, Button as AButton } from 'ant-design-vue';
+import { h,onMounted, reactive, ref, watch } from 'vue';
+import { message, Form as AForm, Input as AInput, Select as ASelect, Table as ATable, Space as ASpace, Button as AButton,Tag as ATag } from 'ant-design-vue';
 import type { TableColumnsType } from 'ant-design-vue';
 import { fetchEmployeeList, type Employee, type EmployeeListResult } from '#/api/core';
 import dayjs from 'dayjs';
@@ -22,14 +22,40 @@ function formatDMY(val?: string | number | Date | null) {
   const d = dayjs(val);
   return d.isValid() ? d.format('DD-MM-YYYY') : '';
 }
+const STATUS_COLOR_MAP: Record<string, string> = {
+  'Đang làm': 'green',
+  'Nghỉ việc': 'volcano',
+  'Thử việc': 'blue',
+  'Nghỉ phép năm': 'gold',
+  'Nghỉ sinh con khối BO': 'magenta',
+  'Nghỉ ốm': 'orange',
+  'Nghỉ không lương': 'default',
+  'Nghỉ chăm con': 'purple',
+  'Nghỉ sinh con khối Shop': 'magenta',
+  'Tạm khóa user': 'red',
+  'Luân chuyển nội bộ FRT': 'cyan',
+};
+
+function renderStatusTag(val?: string) {
+  const text = (val ?? '').toString().trim();
+  const color = STATUS_COLOR_MAP[text] ?? 'default';
+  return h(ATag, { color }, () => text || '-');
+}
+
 const columns: TableColumnsType = [
-  { title: '#', dataIndex: 'id', key: 'id', width: 100, fixed: 'left' },
-  { title: 'Username', dataIndex: 'userName', key: 'username', width: 140 },
-  { title: 'Mã NV', dataIndex: 'employeeCode', key: 'employeeCode', width: 120 },
+  { title: '#', dataIndex: 'id', key: 'id', width: 80, fixed: 'left' },
+  { title: 'UserName', dataIndex: 'userName', key: 'username', width: 100 },
+  { title: 'Mã NV', dataIndex: 'employeeCode', key: 'employeeCode', width: 100 },
   { title: 'Tên', dataIndex: 'name', key: 'name', width: 160 },
   { title: 'Điện thoại', dataIndex: 'phone', key: 'phone', width: 140 },
   { title: 'Email', dataIndex: 'email', key: 'email', width: 200 },
-  { title: 'Trạng thái', dataIndex: 'status', key: 'status', width: 120 },
+  {
+    title: 'Trạng thái',
+    dataIndex: 'status',
+    key: 'status',
+    width: 160,
+    customRender: ({ text }) => renderStatusTag(text as string),
+  },
   {
     title: 'Ngày sinh', 
     dataIndex: 'birthDate', 
