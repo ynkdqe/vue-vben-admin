@@ -13,7 +13,7 @@ WORKDIR /app
 # copy package.json and pnpm-lock.yaml to workspace
 COPY . /app
 
-# 安装依赖
+# Installation dependencies
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 RUN pnpm run build --filter=\!./docs
 
@@ -21,17 +21,17 @@ RUN echo "Builder Success 🎉"
 
 FROM nginx:stable-alpine AS production
 
-# 配置 nginx
+# Configure nginx
 RUN echo "types { application/javascript js mjs; }" > /etc/nginx/conf.d/mjs.conf \
     && rm -rf /etc/nginx/conf.d/default.conf
 
-# 复制构建产物
+# Copy the build product
 COPY --from=builder /app/playground/dist /usr/share/nginx/html
 
-# 复制 nginx 配置
+# Copy nginx configuration
 COPY --from=builder /app/scripts/deploy/nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 8080
 
-# 启动 nginx
+# Start nginx
 CMD ["nginx", "-g", "daemon off;"]
