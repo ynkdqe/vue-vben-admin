@@ -1,14 +1,28 @@
 <script lang="ts" setup>
-import { h,onMounted, reactive, ref, watch } from 'vue';
-import { message, Form as AForm, Input as AInput, Select as ASelect, Table as ATable, Space as ASpace, Button as AButton,Tag as ATag } from 'ant-design-vue';
 import type { TableColumnsType } from 'ant-design-vue';
-import { fetchEmployeeList, type Employee, type EmployeeListResult } from '#/api/core';
+
+import type { Employee, EmployeeListResult } from '#/api/core';
+
+import { h, onMounted, reactive, ref, watch } from 'vue';
+
+import {
+  Button as AButton,
+  Form as AForm,
+  Input as AInput,
+  Select as ASelect,
+  Space as ASpace,
+  Table as ATable,
+  Tag as ATag,
+  message,
+} from 'ant-design-vue';
 import dayjs from 'dayjs';
+
+import { fetchEmployeeList } from '#/api/core';
 
 // Search form state
 const query = reactive({
   keyword: '',
-  status: undefined as undefined | string | number,
+  status: undefined as number | string | undefined,
   page: 1,
   pageSize: 10,
 });
@@ -17,7 +31,7 @@ const query = reactive({
 const loading = ref(false);
 const dataSource = ref<Employee[]>([]);
 const total = ref(0);
-function formatDMY(val?: string | number | Date | null) {
+function formatDMY(val?: Date | null | number | string) {
   if (!val) return '';
   const d = dayjs(val);
   return d.isValid() ? d.format('DD-MM-YYYY') : '';
@@ -45,9 +59,14 @@ function renderStatusTag(val?: string) {
 const columns: TableColumnsType = [
   { title: '#', dataIndex: 'id', key: 'id', width: 80, fixed: 'left' },
   { title: 'UserName', dataIndex: 'userName', key: 'username', width: 100 },
-  { title: 'Mã NV', dataIndex: 'employeeCode', key: 'employeeCode', width: 100 },
-  { title: 'Tên', dataIndex: 'name', key: 'name', width: 160 },
-  { title: 'Điện thoại', dataIndex: 'phone', key: 'phone', width: 140 },
+  {
+    title: 'Mã NV',
+    dataIndex: 'employeeCode',
+    key: 'employeeCode',
+    width: 100,
+  },
+  { title: 'Tên', dataIndex: 'name', key: 'name', width: 200 },
+  { title: 'Điện thoại', dataIndex: 'phone', key: 'phone', width: 120 },
   { title: 'Email', dataIndex: 'email', key: 'email', width: 200 },
   {
     title: 'Trạng thái',
@@ -57,16 +76,16 @@ const columns: TableColumnsType = [
     customRender: ({ text }) => renderStatusTag(text as string),
   },
   {
-    title: 'Ngày sinh', 
-    dataIndex: 'birthDate', 
-    key: 'birthDate', 
+    title: 'Ngày sinh',
+    dataIndex: 'birthDate',
+    key: 'birthDate',
     width: 140,
     customRender: ({ text }) => formatDMY(text),
   },
   {
-    title: 'Ngày vào làm', 
-    dataIndex: 'enrollDate', 
-    key: 'joinDate', 
+    title: 'Ngày vào làm',
+    dataIndex: 'enrollDate',
+    key: 'joinDate',
     width: 140,
     customRender: ({ text }) => formatDMY(text),
   },
@@ -75,9 +94,16 @@ const columns: TableColumnsType = [
     dataIndex: 'resignationDate',
     key: 'leaveDate',
     width: 140,
-    customRender: ({ text }) => formatDMY(text), 
+    customRender: ({ text }) => formatDMY(text),
   },
-  { title: 'Địa chỉ', dataIndex: 'address', key: 'address', width: 220 },
+  {
+    title: 'Địa chỉ',
+    dataIndex: 'address',
+    key: 'address',
+    width: 220,
+    ellipsis: true,
+    customRender: ({ text }) => text || '-',
+  },
 ];
 
 async function loadData() {
@@ -90,9 +116,9 @@ async function loadData() {
       pageSize: query.pageSize,
     });
     dataSource.value = res.items || [];
-    total.value = res.total || res.items.length;
-  } catch (err: any) {
-    message.error(err?.message || 'Failed to load employees');
+    total.value = res.total;
+  } catch (error: any) {
+    message.error(error?.message || 'Failed to load employees');
   } finally {
     loading.value = false;
   }
@@ -126,16 +152,16 @@ const ASelectOption = ASelect.Option;
 </script>
 
 <template>
-  <div class="p-4 space-y-4">
-    <div class="bg-card rounded-md p-4 shadow-sm">
-      <AForm layout="inline" @submit.prevent>
+  <div class="space-y-4 p-4">
+    <div class="search-card rounded-md p-4 shadow-sm">
+      <AForm class="search-form" layout="inline" @submit.prevent>
         <AFormItem label="Từ khóa">
           <AInput
             v-model:value="query.keyword"
             placeholder="Tìm theo tên, mã, email..."
             allow-clear
             style="min-width: 260px"
-            @pressEnter="handleSearch"
+            @press-enter="handleSearch"
           />
         </AFormItem>
 
@@ -149,13 +175,21 @@ const ASelectOption = ASelect.Option;
             <ASelectOption value="Đang làm">Đang làm</ASelectOption>
             <ASelectOption value="Nghỉ việc">Nghỉ việc</ASelectOption>
             <ASelectOption value="Nghỉ phép năm">Nghỉ phép năm</ASelectOption>
-            <ASelectOption value="Nghỉ sinh con khối BO">Nghỉ sinh con khối BO</ASelectOption>
+            <ASelectOption value="Nghỉ sinh con khối BO">
+              Nghỉ sinh con khối BO
+            </ASelectOption>
             <ASelectOption value="Nghỉ ốm">Nghỉ ốm</ASelectOption>
-            <ASelectOption value="Nghỉ không lương">Nghỉ không lương</ASelectOption>
+            <ASelectOption value="Nghỉ không lương">
+              Nghỉ không lương
+            </ASelectOption>
             <ASelectOption value="Nghỉ chăm con">Nghỉ chăm con</ASelectOption>
-            <ASelectOption value="Nghỉ sinh con khối Shop">Nghỉ sinh con khối Shop</ASelectOption>
+            <ASelectOption value="Nghỉ sinh con khối Shop">
+              Nghỉ sinh con khối Shop
+            </ASelectOption>
             <ASelectOption value="Tạm khóa user">Tạm khóa user</ASelectOption>
-            <ASelectOption value="Luân chuyển nội bộ FRT">Luân chuyển nội bộ FRT</ASelectOption>
+            <ASelectOption value="Luân chuyển nội bộ FRT">
+              Luân chuyển nội bộ FRT
+            </ASelectOption>
           </ASelect>
         </AFormItem>
 
@@ -168,7 +202,7 @@ const ASelectOption = ASelect.Option;
       </AForm>
     </div>
 
-    <div class="bg-card rounded-md p-2 shadow-sm">
+    <div class="table-container">
       <ATable
         :columns="columns"
         :data-source="dataSource"
@@ -176,23 +210,18 @@ const ASelectOption = ASelect.Option;
         :pagination="{
           current: query.page,
           pageSize: query.pageSize,
-          total: total,
+          total,
           showSizeChanger: true,
         }"
         row-key="id"
-        @change="(pagination) => {
-          query.page = pagination.current!;
-          query.pageSize = pagination.pageSize!;
-        }"
+        @change="
+          (pagination) => {
+            query.page = pagination.current!;
+            query.pageSize = pagination.pageSize!;
+          }
+        "
         :scroll="{ x: 1400 }"
       />
     </div>
   </div>
-  
 </template>
-
-<style scoped>
-.bg-card {
-  background-color: var(--card-bg, #fff);
-}
-</style>
