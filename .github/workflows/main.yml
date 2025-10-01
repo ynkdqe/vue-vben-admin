@@ -88,14 +88,45 @@ jobs:
           docker build -f scripts/deploy/Dockerfile -t hrms-app:${{ github.sha }} .
           docker tag hrms-app:${{ github.sha }} hrms-app:latest
 
-      - name: Deploy to VPS (Docker)
+      - name: Deploy to VPS (Blue-Green)
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
         run: |
-          echo "🚀 Deploying to VPS..."
-          # Add your deployment script here
-          # Example: 
-          # docker save hrms-app:latest | gzip | ssh user@vps "gunzip | docker load"
-          # ssh user@vps "docker stop hrms-app || true && docker rm hrms-app || true"
-          # ssh user@vps "docker run -d --name hrms-app -p 80:8080 hrms-app:latest"
+          # Setup SSH key
+          mkdir -p ~/.ssh
+          echo "$VPS_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H $VPS_HOST >> ~/.ssh/known_hosts
+          
+          # Save and transfer Docker image
+          docker save hrms-app:latest | gzip > hrms-app.tar.gz
+          
+          # Upload image and deploy script to VPS
+          scp -i ~/.ssh/deploy_key hrms-app.tar.gz $VPS_USER@$VPS_HOST:/tmp/
+          scp -i ~/.ssh/deploy_key scripts/deploy/deploy-blue-green.sh $VPS_USER@$VPS_HOST:/tmp/
+          
+          # Execute blue-green deployment on VPS
+          ssh -i ~/.ssh/deploy_key $VPS_USER@$VPS_HOST << 'EOF'
+            cd /tmp
+            
+            # Load new image
+            gunzip -c hrms-app.tar.gz | docker load
+            
+            # Make deploy script executable
+            chmod +x deploy-blue-green.sh
+            
+            # Run blue-green deployment (zero downtime)
+            # SERVICE=hrms-app, CONTAINER_PORT=8080, HEALTH=/health
+            ./deploy-blue-green.sh hrms-app:latest hrms-app 8080 /health
+            
+            # Cleanup
+            rm -f /tmp/hrms-app.tar.gz /tmp/deploy-blue-green.sh
+          EOF
+          
+          echo "🚀 Blue-Green deployment completed!"
+          echo "🌐 HRMS App is accessible at http://$VPS_HOST:8080"
 
   # ===== Status Check =====
   ci-success:
