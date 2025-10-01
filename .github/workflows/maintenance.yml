@@ -1,0 +1,112 @@
+name: Security & Maintenance
+
+on:
+  schedule:
+    # Run every Sunday at 1 AM (Asia/Ho_Chi_Minh)
+    - cron: '0 18 * * 0'  # UTC time (1 AM +7 = 18:00 UTC previous day)
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  security-events: write
+  issues: write
+  pull-requests: write
+  contents: read
+
+jobs:
+  # ===== Security Scanning =====
+  security-scan:
+    name: CodeQL Security Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          build-mode: none
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: '/language:javascript-typescript'
+
+  # ===== Dependency Check =====
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: ./.github/actions/setup-node
+
+      - name: Check for vulnerabilities
+        run: |
+          pnpm audit --audit-level moderate
+          # pnpm outdated
+
+  # ===== Clean up stale issues/PRs =====
+  cleanup-stale:
+    name: Close Stale Issues & PRs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Stale
+        uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          stale-issue-message: |
+            This issue has been automatically marked as stale because it has been open for 60 days with no activity.
+            
+            **Actions needed:**
+            - Remove the `stale` label if this issue is still relevant
+            - Add a comment to keep it active
+            - Otherwise, it will be closed in 7 days
+            
+            Thank you for your contribution! 🙏
+          stale-pr-message: |
+            This PR has been automatically marked as stale because it has been open for 60 days with no activity.
+            
+            **Actions needed:**
+            - Remove the `stale` label if this PR is still relevant  
+            - Rebase and resolve conflicts
+            - Add a comment to keep it active
+            - Otherwise, it will be closed in 7 days
+            
+            Thank you for your contribution! 🙏
+          close-issue-message: |
+            This issue was automatically closed because it has been stale for 7 days with no activity.
+            
+            If you believe this issue is still relevant, please reopen it or create a new issue with updated information.
+          close-pr-message: |
+            This PR was automatically closed because it has been stale for 7 days with no activity.
+            
+            If you want to continue working on this, please reopen or create a new PR.
+          exempt-issue-labels: 'bug,enhancement,good first issue,help wanted'
+          exempt-pr-labels: 'work in progress,blocked'
+          days-before-stale: 60
+          days-before-close: 7
+          operations-per-run: 100
+
+  # ===== Health Check Summary =====
+  maintenance-summary:
+    name: Maintenance Summary
+    if: always()
+    runs-on: ubuntu-latest
+    needs: [security-scan, dependency-review, cleanup-stale]
+    steps:
+      - name: Report maintenance status
+        env:
+          SECURITY_STATUS: ${{ needs.security-scan.result }}
+          DEPENDENCY_STATUS: ${{ needs.dependency-review.result }}
+          CLEANUP_STATUS: ${{ needs.cleanup-stale.result }}
+        run: |
+          echo "## 🔒 Maintenance Report"
+          echo "- **Security Scan**: $SECURITY_STATUS"
+          echo "- **Dependency Review**: $DEPENDENCY_STATUS" 
+          echo "- **Cleanup Stale**: $CLEANUP_STATUS"
+          echo ""
+          echo "Maintenance completed on $(date)"
