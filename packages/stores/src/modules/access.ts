@@ -53,9 +53,20 @@ export const useAccessStore = defineStore('core-access', {
       this.accessRoutes = routes;
     },
     setAccessToken(token: any) {
-      this.accessToken = token.access_token;
-      this.refreshToken = token.refresh_token;
-      this.expiresAt = Math.floor(Date.now() / 1000) + token.expires_in;
+      if (!token) {
+        this.accessToken = null;
+        this.refreshToken = null;
+        this.expiresAt = 0;
+        return;
+      }
+
+      this.accessToken = token.access_token ?? null;
+      this.refreshToken = token.refresh_token ?? null;
+
+      const expiresIn = Number(token.expires_in);
+      this.expiresAt = Number.isFinite(expiresIn)
+        ? Math.floor(Date.now() / 1000) + expiresIn
+        : 0;
     },
     setIsAccessChecked(isAccessChecked: boolean) {
       this.isAccessChecked = isAccessChecked;

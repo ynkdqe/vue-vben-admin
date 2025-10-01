@@ -2,7 +2,7 @@
 import type { VbenFormSchema } from '@vben/common-ui';
 import type { BasicOption } from '@vben/types';
 
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { AuthenticationLogin, z } from '@vben/common-ui';
 import { $t } from '@vben/locales';
@@ -12,6 +12,22 @@ import { useAuthStore } from '#/store';
 defineOptions({ name: 'Login' });
 
 const authStore = useAuthStore();
+
+const TENANT_STORAGE_KEY = `REMEMBER_ME_TENANT_${location.hostname}`;
+
+const storedTenant =
+  typeof window === 'undefined'
+    ? ' '
+    : (localStorage.getItem(TENANT_STORAGE_KEY) ?? ' ');
+
+const loginRef = ref<InstanceType<typeof AuthenticationLogin> | null>(null);
+
+function persistTenant(value?: string) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  localStorage.setItem(TENANT_STORAGE_KEY, value ?? ' ');
+}
 
 const TENANT_OPTIONS: BasicOption[] = [
   {
@@ -39,6 +55,7 @@ const formSchema = computed((): VbenFormSchema[] => {
       componentProps: {
         options: TENANT_OPTIONS,
         placeholder: $t('authentication.selectAccount'),
+        defaultValue: storedTenant,
       },
       dependencies: {
         trigger(values, form) {
@@ -49,6 +66,9 @@ const formSchema = computed((): VbenFormSchema[] => {
               username: 'admin',
               tenant: values.tenant,
             });
+            persistTenant(values.tenant);
+          } else {
+            persistTenant(' ');
           }
         },
         triggerFields: ['tenant'],
@@ -59,7 +79,7 @@ const formSchema = computed((): VbenFormSchema[] => {
         .string()
         .min(1, { message: $t('authentication.selectAccount') })
         .optional()
-        .default(' '),
+        .default(storedTenant || ' '),
     },
     {
       component: 'VbenInput',
@@ -81,12 +101,30 @@ const formSchema = computed((): VbenFormSchema[] => {
     },
   ];
 });
+
+async function handleLogin(values: Record<string, any>) {
+  persistTenant(values?.tenant);
+  return authStore.authLogin(values);
+}
+
+onMounted(() => {
+  const tenant = storedTenant;
+  if (!tenant) {
+    return;
+  }
+  const formApi = loginRef.value?.getFormApi?.();
+  if (!formApi) {
+    return;
+  }
+  formApi.setFieldValue('tenant', tenant);
+});
 </script>
 
 <template>
   <AuthenticationLogin
+    ref="loginRef"
     :form-schema="formSchema"
     :loading="authStore.loginLoading"
-    @submit="authStore.authLogin"
+    @submit="handleLogin"
   />
 </template>

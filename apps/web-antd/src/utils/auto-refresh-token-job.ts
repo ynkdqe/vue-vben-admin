@@ -2,6 +2,7 @@ import { preferences } from '@vben/preferences';
 import { useAccessStore } from '@vben/stores';
 
 import { refreshTokenApi } from '#/api/core';
+import { useAuthStore } from '#/store';
 
 import { registerSimpleIntervalJob, removeJob } from './scheduler';
 
@@ -9,6 +10,23 @@ const JOB_ID = 'auto-refresh-token';
 const REFRESH_THRESHOLD_SECONDS = 5 * 60;
 let isRegistered = false;
 let isRefreshing = false;
+
+async function handleRefreshFailure(
+  accessStore: ReturnType<typeof useAccessStore>,
+  message: string,
+  detail?: unknown,
+): Promise<void> {
+  if (detail === undefined) {
+    console.error(`[TokenRefreshJob] ${message}`);
+  } else {
+    console.error(`[TokenRefreshJob] ${message}`, detail);
+  }
+
+  accessStore.setAccessToken(null);
+
+  const authStore = useAuthStore();
+  await authStore.logout();
+}
 
 async function handleRefresh(): Promise<void> {
   if (!preferences.app.enableRefreshToken) {
@@ -44,13 +62,18 @@ async function handleRefresh(): Promise<void> {
     ) {
       accessStore.setAccessToken(payload);
     } else {
-      console.warn(
-        '[TokenRefreshJob] Unexpected refresh token payload',
+      await handleRefreshFailure(
+        accessStore,
+        'Unexpected refresh token payload',
         payload,
       );
     }
   } catch (error) {
-    console.error('[TokenRefreshJob] Failed to refresh access token', error);
+    await handleRefreshFailure(
+      accessStore,
+      'Failed to refresh access token',
+      error,
+    );
   } finally {
     isRefreshing = false;
   }
