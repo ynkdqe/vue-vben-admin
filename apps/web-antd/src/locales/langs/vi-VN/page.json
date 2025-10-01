@@ -10,5 +10,12 @@
     "title": "Bảng điều khiển",
     "analytics": "Phân tích",
     "workspace": "Không gian làm việc"
+  },
+  "hrms": {
+    "title": "Nhân sự",
+    "employee": "Nhân viên",
+    "contract": "Hợp đồng",
+    "workshift": "Ca làm việc",
+    "spreadsheet": "Bảng tính"
   }
 }

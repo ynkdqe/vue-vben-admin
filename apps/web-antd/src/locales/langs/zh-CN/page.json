@@ -10,5 +10,12 @@
     "title": "概览",
     "analytics": "分析页",
     "workspace": "工作台"
+  },
+  "hrms": {
+    "title": "Nhân sự",
+    "employee": "Nhân viên",
+    "contract": "Hợp đồng",
+    "workshift": "Ca làm việc",
+    "spreadsheet": "Bảng tính"
   }
 }

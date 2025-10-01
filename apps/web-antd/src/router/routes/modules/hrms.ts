@@ -1,5 +1,7 @@
 import type { RouteRecordRaw } from 'vue-router';
 
+import { $t } from '#/locales';
+
 const routes: RouteRecordRaw[] = [
   {
     name: 'Hrms',
@@ -7,7 +9,7 @@ const routes: RouteRecordRaw[] = [
     meta: {
       icon: 'mdi:briefcase-account-outline',
       order: 20,
-      title: 'HRMS',
+      title: $t('page.hrms.title'),
     },
     children: [
       {
@@ -16,7 +18,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('#/views/hrms/employee/index.vue'),
         meta: {
           icon: 'mdi:account-group-outline',
-          title: 'Employee',
+          title: $t('page.hrms.employee'),
         },
       },
       {
@@ -25,7 +27,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('#/views/hrms/contract/index.vue'),
         meta: {
           icon: 'mdi:file-document-edit-outline',
-          title: 'Contract',
+          title: $t('page.hrms.contract'),
         },
       },
       {
@@ -34,7 +36,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('#/views/hrms/work-shift/index.vue'),
         meta: {
           icon: 'mdi:clock-time-eight-outline',
-          title: 'Work Shift',
+          title: $t('page.hrms.workshift'),
         },
       },
       {
@@ -43,7 +45,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('#/views/hrms/spreadsheet/index.vue'),
         meta: {
           icon: 'mdi:table-large',
-          title: 'Spreadsheet',
+          title: $t('page.hrms.spreadsheet'),
         },
       },
     ],

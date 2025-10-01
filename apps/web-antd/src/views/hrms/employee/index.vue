@@ -6,18 +6,31 @@ import type { Employee, EmployeeListResult } from '#/api/core';
 import { h, onMounted, reactive, ref, watch } from 'vue';
 
 import {
-  Button as AButton,
-  Form as AForm,
-  Input as AInput,
-  Select as ASelect,
-  Space as ASpace,
-  Table as ATable,
-  Tag as ATag,
+  Button,
+  Form,
+  Input,
   message,
+  Select,
+  Space,
+  Table,
+  Tag,
 } from 'ant-design-vue';
 import dayjs from 'dayjs';
 
 import { fetchEmployeeList } from '#/api/core';
+
+import EmployeeForm from './components/EmployeeForm.vue';
+
+// Component aliases for template usage
+const AButton = Button;
+const AForm = Form;
+const AFormItem = Form.Item;
+const AInput = Input;
+const ASelect = Select;
+const ASelectOption = Select.Option;
+const ASpace = Space;
+const ATable = Table;
+const ATag = Tag;
 
 // Search form state
 const query = reactive({
@@ -137,6 +150,30 @@ function handleReset() {
   loadData();
 }
 
+// Drawer state
+const drawerVisible = ref(false);
+const drawerLoading = ref(false);
+
+// Drawer handlers
+function showAddDrawer() {
+  drawerVisible.value = true;
+}
+
+function handleFormSubmit(_formData: any) {
+  drawerLoading.value = true;
+
+  // TODO: Call API to create employee
+  // await createEmployee(_formData);
+
+  // Simulate API call
+  setTimeout(() => {
+    message.success('Thêm nhân viên thành công');
+    drawerVisible.value = false;
+    drawerLoading.value = false;
+    loadData(); // Reload the table
+  }, 1000);
+}
+
 onMounted(loadData);
 
 watch(
@@ -145,10 +182,6 @@ watch(
     loadData();
   },
 );
-
-// expose sub components for template usage
-const AFormItem = AForm.Item;
-const ASelectOption = ASelect.Option;
 </script>
 
 <template>
@@ -197,6 +230,9 @@ const ASelectOption = ASelect.Option;
           <ASpace>
             <AButton type="primary" @click="handleSearch">Tìm kiếm</AButton>
             <AButton @click="handleReset">Làm mới</AButton>
+            <AButton type="primary" ghost @click="showAddDrawer">
+              Thêm mới
+            </AButton>
           </ASpace>
         </AFormItem>
       </AForm>
@@ -223,5 +259,12 @@ const ASelectOption = ASelect.Option;
         :scroll="{ x: 1400 }"
       />
     </div>
+
+    <!-- Employee Form Component -->
+    <EmployeeForm
+      v-model:visible="drawerVisible"
+      :loading="drawerLoading"
+      @submit="handleFormSubmit"
+    />
   </div>
 </template>
