@@ -150,7 +150,7 @@ jobs:
   ci-success:
     name: CI Success
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, arm64]
     needs: [test, build]
     steps:
       - name: Check CI status
