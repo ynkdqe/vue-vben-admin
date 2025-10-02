@@ -1,4 +1,4 @@
-name: vue-vben-admin CI/CD
+name: admin-fe-vue CI/CD
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
       - '.github/workflows/main.yml'
       - 'Dockerfile'
   pull_request:
-    branches: [main, develop]
+    branches: [main]
   workflow_dispatch: {}
 
 permissions:
@@ -22,9 +22,9 @@ env:
   CI: true
   TZ: Asia/Ho_Chi_Minh
   HUSKY: '0'
-  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/vue-vben-admin
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/admin-fe-vue
   DOCKERFILE: scripts/deploy/Dockerfile
-  SERVICE_NAME: 1nfinity-fe
+  SERVICE_NAME: admin-fe-vue
   CONTAINER_PORT: '8080'
   HEALTH_PATH: none
 
@@ -36,7 +36,7 @@ jobs:
   # ===== Test & Lint =====
   test:
     name: Test & Lint
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, arm64]
     timeout-minutes: 20
     steps:
       - name: Checkout
@@ -53,7 +53,7 @@ jobs:
   # ===== Build =====
   build:
     name: Build & Package
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, arm64]
     timeout-minutes: 15
     needs: test
     steps:
@@ -65,7 +65,7 @@ jobs:
       - name: Setup Node
         uses: ./.github/actions/setup-node
 
-      - name: Build Vue Vben App
+      - name: Build Admin Fe Vue App
         run: pnpm run build --filter=@vben/web-antd
 
       - name: Login to GitHub Container Registry
@@ -96,7 +96,7 @@ jobs:
   deploy:
     name: Deploy to Production
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, arm64]
     needs: build
     environment: production
     env:
@@ -113,7 +113,7 @@ jobs:
           username: ${{ env.SSH_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           source: scripts/deploy/deploy-blue-green.sh
-          target: /home/${{ env.SSH_USER }}/vue-vben-admin
+          target: /home/${{ env.SSH_USER }}/admin-fe-vue
 
       - name: Deploy with Blue-Green Strategy
         uses: appleboy/ssh-action@v1.2.0
@@ -134,16 +134,16 @@ jobs:
             set -euo pipefail
             
             # Setup deploy script
-            sudo mkdir -p /home/${{ env.SSH_USER }}/vue-vben-admin/scripts
-            sudo mv -f /home/${{ env.SSH_USER }}/vue-vben-admin/scripts/deploy-blue-green.sh /usr/local/bin/deploy-blue-green.sh || \
-            sudo cp -f /home/${{ env.SSH_USER }}/vue-vben-admin/scripts/deploy-blue-green.sh /usr/local/bin/deploy-blue-green.sh
+            sudo mkdir -p /home/${{ env.SSH_USER }}/admin-fe-vue/scripts
+            sudo mv -f /home/${{ env.SSH_USER }}/admin-fe-vue/scripts/deploy-blue-green.sh /usr/local/bin/deploy-blue-green.sh || \
+            sudo cp -f /home/${{ env.SSH_USER }}/admin-fe-vue/scripts/deploy-blue-green.sh /usr/local/bin/deploy-blue-green.sh
             sudo chmod +x /usr/local/bin/deploy-blue-green.sh
             
             # Execute blue-green deployment
             echo "🚀 Starting blue-green deployment..."
             /usr/local/bin/deploy-blue-green.sh "$IMAGE" "$SERVICE" "$CPORT" "$HEALTH"
             
-            echo "✅ vue-vben-admin deployment completed!"
+            echo "✅ admin-fe-vue deployment completed!"
             echo "🌐 Access: http://${{ env.SSH_HOST }}:8080"
 
   # ===== Status Check =====
