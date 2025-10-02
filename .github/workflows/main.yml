@@ -111,7 +111,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           source: scripts/deploy/deploy-blue-green.sh
-          target: /home/${{ env.SSH_USER }}/admin-fe-vue
+          target: /home/${{ secrets.VPS_USER }}/admin-fe-vue
 
       - name: Deploy with Blue-Green Strategy
         uses: appleboy/ssh-action@v1.2.0
@@ -142,4 +142,4 @@ jobs:
             /usr/local/bin/deploy-blue-green.sh "$IMAGE" "$SERVICE" "$CPORT" "$HEALTH"
             
             echo "✅ admin-fe-vue deployment completed!"
-            echo "🌐 Access: http://${{ env.SSH_HOST }}:8080"
+            echo "🌐 Access: http://${{ secrets.VPS_HOST }}:8080"
