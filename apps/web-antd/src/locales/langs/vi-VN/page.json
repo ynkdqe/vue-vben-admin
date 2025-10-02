@@ -17,5 +17,12 @@
     "contract": "Hợp đồng",
     "workshift": "Ca làm việc",
     "spreadsheet": "Bảng tính"
+  },
+  "sms": {
+    "title": "Sms",
+    "provider": "Nhà cung cấp",
+    "template": "Mẫu tin nhắn",
+    "message": "Tin nhắn",
+    "notification": "Thông báo"
   }
 }

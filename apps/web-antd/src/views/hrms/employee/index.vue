@@ -3,11 +3,12 @@ import type { TableColumnsType } from 'ant-design-vue';
 
 import type { Employee, EmployeeListResult } from '#/api/core';
 
-import { h, onMounted, reactive, ref, watch } from 'vue';
+import { computed, h, onMounted, reactive, ref, watch } from 'vue';
 
 import {
   Button,
   Form,
+  Grid,
   Input,
   message,
   Select,
@@ -31,6 +32,10 @@ const ASelectOption = Select.Option;
 const ASpace = Space;
 const ATable = Table;
 const ATag = Tag;
+
+// Responsive breakpoint
+const screens = Grid.useBreakpoint();
+const isMobile = computed(() => !screens.value?.md);
 
 // Search form state
 const query = reactive({
@@ -187,23 +192,27 @@ watch(
 <template>
   <div class="space-y-4 p-4">
     <div class="search-card rounded-md p-4 shadow-sm">
-      <AForm class="search-form" layout="inline" @submit.prevent>
-        <AFormItem label="Từ khóa">
+      <AForm
+        class="search-form"
+        :layout="isMobile ? 'vertical' : 'inline'"
+        @submit.prevent
+      >
+        <AFormItem label="Từ khóa" :style="isMobile ? { width: '100%' } : {}">
           <AInput
             v-model:value="query.keyword"
             placeholder="Tìm theo tên, mã, email..."
             allow-clear
-            style="min-width: 260px"
+            :style="isMobile ? { width: '100%' } : { minWidth: '260px' }"
             @press-enter="handleSearch"
           />
         </AFormItem>
 
-        <AFormItem label="Trạng thái">
+        <AFormItem label="Trạng thái" :style="isMobile ? { width: '100%' } : {}">
           <ASelect
             v-model:value="query.status"
             allow-clear
             placeholder="Tất cả"
-            style="width: 180px"
+            :style="isMobile ? { width: '100%' } : { width: '180px' }"
           >
             <ASelectOption value="Đang làm">Đang làm</ASelectOption>
             <ASelectOption value="Nghỉ việc">Nghỉ việc</ASelectOption>
@@ -226,11 +235,13 @@ watch(
           </ASelect>
         </AFormItem>
 
-        <AFormItem>
-          <ASpace>
-            <AButton type="primary" @click="handleSearch">Tìm kiếm</AButton>
-            <AButton @click="handleReset">Làm mới</AButton>
-            <AButton type="primary" ghost @click="showAddDrawer">
+        <AFormItem :style="isMobile ? { width: '100%' } : {}">
+          <ASpace :wrap="true" :style="isMobile ? { width: '100%' } : {}">
+            <AButton :block="isMobile" type="primary" @click="handleSearch">
+              Tìm kiếm
+            </AButton>
+            <AButton :block="isMobile" @click="handleReset">Làm mới</AButton>
+            <AButton :block="isMobile" type="primary" ghost @click="showAddDrawer">
               Thêm mới
             </AButton>
           </ASpace>

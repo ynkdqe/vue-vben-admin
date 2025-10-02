@@ -1,5 +1,7 @@
 import type { RouteRecordRaw } from 'vue-router';
 
+import { $t } from '#/locales';
+
 const routes: RouteRecordRaw[] = [
   {
     name: 'Sms',
@@ -7,7 +9,7 @@ const routes: RouteRecordRaw[] = [
     meta: {
       icon: 'mdi:message-text-outline',
       order: 21,
-      title: 'Sms',
+      title: $t('page.sms.title'),
     },
     children: [
       {
@@ -16,7 +18,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('#/views/sms/message/index.vue'),
         meta: {
           icon: 'mdi:message-processing-outline',
-          title: 'Message',
+          title: $t('page.sms.message'),
         },
       },
       {
@@ -25,7 +27,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('#/views/sms/provider/index.vue'),
         meta: {
           icon: 'mdi:server-outline',
-          title: 'Provider',
+          title: $t('page.sms.provider'),
         },
       },
       {
@@ -34,7 +36,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('#/views/sms/template/index.vue'),
         meta: {
           icon: 'mdi:file-document-outline',
-          title: 'Template',
+          title: $t('page.sms.template'),
         },
       },
       {
@@ -43,7 +45,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('#/views/sms/notification/index.vue'),
         meta: {
           icon: 'mdi:bell-outline',
-          title: 'Notification',
+          title: $t('page.sms.notification'),
         },
       },
     ],

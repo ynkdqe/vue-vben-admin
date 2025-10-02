@@ -17,5 +17,12 @@
     "contract": "Contract",
     "workshift": "Workshift",
     "spreadsheet": "Spreadsheet"
+  },
+  "sms": {
+    "title": "Sms",
+    "provider": "Provider",
+    "template": "Template",
+    "message": "Message",
+    "notification": "Notification"
   }
 }
