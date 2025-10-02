@@ -111,7 +111,8 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           source: scripts/deploy/deploy-blue-green.sh
-          target: /home/${{ secrets.VPS_USER }}/admin-fe-vue
+          target: /home/${{ secrets.VPS_USER }}/admin-fe-vue/scripts/
+          strip_components: 2
 
       - name: Deploy with Blue-Green Strategy
         uses: appleboy/ssh-action@v1.2.0
