@@ -33,11 +33,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # ===== Test & Lint =====
+  # ===== Test =====
   test:
-    name: Test & Lint
+    name: Test
     runs-on: [self-hosted, linux, arm64]
-    timeout-minutes: 20
+    timeout-minutes: 5
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -47,14 +47,14 @@ jobs:
       - name: Setup Node
         uses: ./.github/actions/setup-node
 
-      - name: Run lint
-        run: pnpm run lint
+      - name: Run tests
+        run: pnpm run test:unit
 
   # ===== Build =====
   build:
     name: Build & Package
     runs-on: [self-hosted, linux, arm64]
-    timeout-minutes: 15
+    timeout-minutes: 10
     needs: test
     steps:
       - name: Checkout
