@@ -83,7 +83,7 @@ jobs:
           context: .
           file: ${{ env.DOCKERFILE }}
           push: true
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/arm64
           build-args: |
             GIT_SHA=${{ github.sha }}
             BUILD_NUMBER=${{ github.run_number }}
