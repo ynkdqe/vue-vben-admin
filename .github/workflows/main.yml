@@ -27,8 +27,6 @@ env:
   SERVICE_NAME: admin-fe-vue
   CONTAINER_PORT: '8080'
   HEALTH_PATH: none
-  SSH_HOST: ${{ secrets.VPS_HOST }}
-  SSH_USER: ${{ secrets.VPS_USER }}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -101,9 +99,6 @@ jobs:
     runs-on: [self-hosted, linux, arm64]
     needs: build
     environment: production
-    env:
-      SSH_HOST: ${{ secrets.SSH_HOST }}
-      SSH_USER: ${{ secrets.VPS_USER }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -111,8 +106,8 @@ jobs:
       - name: Upload deploy script
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ env.SSH_HOST }}
-          username: ${{ env.SSH_USER }}
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           source: scripts/deploy/deploy-blue-green.sh
           target: /home/${{ env.SSH_USER }}/admin-fe-vue
@@ -127,8 +122,8 @@ jobs:
           GHCR_USER: ${{ github.actor }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          host: ${{ env.SSH_HOST }}
-          username: ${{ env.SSH_USER }}
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           envs: IMAGE,SERVICE,CPORT,HEALTH,GHCR_USER,GHCR_TOKEN
           script_stop: true
@@ -136,9 +131,9 @@ jobs:
             set -euo pipefail
             
             # Setup deploy script
-            sudo mkdir -p /home/${{ env.SSH_USER }}/admin-fe-vue/scripts
-            sudo mv -f /home/${{ env.SSH_USER }}/admin-fe-vue/scripts/deploy-blue-green.sh /usr/local/bin/deploy-blue-green.sh || \
-            sudo cp -f /home/${{ env.SSH_USER }}/admin-fe-vue/scripts/deploy-blue-green.sh /usr/local/bin/deploy-blue-green.sh
+            sudo mkdir -p /home/${{ secrets.VPS_USER }}/admin-fe-vue/scripts
+            sudo mv -f /home/${{ secrets.VPS_USER }}/admin-fe-vue/scripts/deploy-blue-green.sh /usr/local/bin/deploy-blue-green.sh || \
+            sudo cp -f /home/${{ secrets.VPS_USER }}/admin-fe-vue/scripts/deploy-blue-green.sh /usr/local/bin/deploy-blue-green.sh
             sudo chmod +x /usr/local/bin/deploy-blue-green.sh
             
             # Execute blue-green deployment
@@ -146,23 +141,4 @@ jobs:
             /usr/local/bin/deploy-blue-green.sh "$IMAGE" "$SERVICE" "$CPORT" "$HEALTH"
             
             echo "✅ admin-fe-vue deployment completed!"
-            echo "🌐 Access: http://${{ env.SSH_HOST }}:8080"
-
-  # ===== Status Check =====
-  ci-success:
-    name: CI Success
-    if: always()
-    runs-on: [self-hosted, linux, arm64]
-    needs: [test, build]
-    steps:
-      - name: Check CI status
-        env:
-          FAILURE: ${{ contains(join(needs.*.result, ','), 'failure') || contains(join(needs.*.result, ','), 'cancelled') }}
-        run: |
-          if [ "$FAILURE" = "true" ]; then
-            echo "❌ CI pipeline failed"
-            exit 1
-          else
-            echo "✅ CI pipeline passed successfully"
-            exit 0
-          fi
+            echo "🌐 Access: http://${{ secrets.VPS_HOST }}:8080"
