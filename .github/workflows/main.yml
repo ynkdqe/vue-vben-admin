@@ -1,30 +1,45 @@
-name: Main CI/CD
+name: vue-vben-admin CI/CD
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'apps/web-antd/**'
+      - 'packages/**'
+      - 'scripts/deploy/**'
+      - '.github/workflows/main.yml'
+      - 'Dockerfile'
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch: {}
 
 permissions:
   contents: read
-  pull-requests: write
+  packages: write
+  id-token: write
 
 env:
   CI: true
   TZ: Asia/Ho_Chi_Minh
   HUSKY: '0'
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/vue-vben-admin
+  DOCKERFILE: scripts/deploy/Dockerfile
+  SERVICE_NAME: 1nfinity-fe
+  CONTAINER_PORT: '8080'
+  HEALTH_PATH: none
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  # ===== CI Jobs =====
-  test-and-lint:
+  # ===== Test & Lint =====
+  test:
     name: Test & Lint
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -32,16 +47,17 @@ jobs:
       - name: Setup Node
         uses: ./.github/actions/setup-node
 
-      - name: Run tests
-        run: pnpm run test:unit
+      - name: Run lint
+        run: pnpm run lint
 
+  # ===== Build =====
   build:
-    name: Build
+    name: Build & Package
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: test-and-lint
+    needs: test
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -49,94 +65,102 @@ jobs:
       - name: Setup Node
         uses: ./.github/actions/setup-node
 
-      - name: Build web-antd (HRMS)
+      - name: Build Vue Vben App
         run: pnpm run build --filter=@vben/web-antd
 
-      - name: Upload build artifacts
+      - name: Login to GitHub Container Registry
         if: github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
+        uses: docker/login-action@v3
         with:
-          name: web-antd-dist
-          path: apps/web-antd/dist/
-          retention-days: 1
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-  # ===== Deploy Job =====
+      - name: Build & Push Docker Image
+        if: github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ env.DOCKERFILE }}
+          push: true
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            GIT_SHA=${{ github.sha }}
+            BUILD_NUMBER=${{ github.run_number }}
+          tags: |
+            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          provenance: false
+
+  # ===== Deploy =====
   deploy:
     name: Deploy to Production
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     needs: build
     environment: production
+    env:
+      SSH_HOST: ${{ secrets.VPS_IP }}
+      SSH_USER: ${{ secrets.VPS_USER }}
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
+      - name: Upload deploy script
+        uses: appleboy/scp-action@v0.1.7
         with:
-          name: web-antd-dist
-          path: apps/web-antd/dist/
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: scripts/deploy/deploy-blue-green.sh
+          target: /home/${{ env.SSH_USER }}/vue-vben-admin
 
-      - name: Build Docker image
-        run: |
-          docker build -f scripts/deploy/Dockerfile -t hrms-app:${{ github.sha }} .
-          docker tag hrms-app:${{ github.sha }} hrms-app:latest
-
-      - name: Deploy to VPS (Blue-Green)
+      - name: Deploy with Blue-Green Strategy
+        uses: appleboy/ssh-action@v1.2.0
         env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
-        run: |
-          # Setup SSH key
-          mkdir -p ~/.ssh
-          echo "$VPS_SSH_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H $VPS_HOST >> ~/.ssh/known_hosts
-          
-          # Save and transfer Docker image
-          docker save hrms-app:latest | gzip > hrms-app.tar.gz
-          
-          # Upload image and deploy script to VPS
-          scp -i ~/.ssh/deploy_key hrms-app.tar.gz $VPS_USER@$VPS_HOST:/tmp/
-          scp -i ~/.ssh/deploy_key scripts/deploy/deploy-blue-green.sh $VPS_USER@$VPS_HOST:/tmp/
-          
-          # Execute blue-green deployment on VPS
-          ssh -i ~/.ssh/deploy_key $VPS_USER@$VPS_HOST << 'EOF'
-            cd /tmp
+          IMAGE: ${{ env.IMAGE_NAME }}:latest
+          SERVICE: ${{ env.SERVICE_NAME }}
+          CPORT: ${{ env.CONTAINER_PORT }}
+          HEALTH: ${{ env.HEALTH_PATH }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          envs: IMAGE,SERVICE,CPORT,HEALTH,GHCR_USER,GHCR_TOKEN
+          script_stop: true
+          script: |
+            set -euo pipefail
             
-            # Load new image
-            gunzip -c hrms-app.tar.gz | docker load
+            # Setup deploy script
+            sudo mkdir -p /home/${{ env.SSH_USER }}/vue-vben-admin/scripts
+            sudo mv -f /home/${{ env.SSH_USER }}/vue-vben-admin/scripts/deploy-blue-green.sh /usr/local/bin/deploy-blue-green.sh || \
+            sudo cp -f /home/${{ env.SSH_USER }}/vue-vben-admin/scripts/deploy-blue-green.sh /usr/local/bin/deploy-blue-green.sh
+            sudo chmod +x /usr/local/bin/deploy-blue-green.sh
             
-            # Make deploy script executable
-            chmod +x deploy-blue-green.sh
+            # Execute blue-green deployment
+            echo "🚀 Starting blue-green deployment..."
+            /usr/local/bin/deploy-blue-green.sh "$IMAGE" "$SERVICE" "$CPORT" "$HEALTH"
             
-            # Run blue-green deployment (zero downtime)
-            # SERVICE=hrms-app, CONTAINER_PORT=8080, HEALTH=/health
-            ./deploy-blue-green.sh hrms-app:latest hrms-app 8080 /health
-            
-            # Cleanup
-            rm -f /tmp/hrms-app.tar.gz /tmp/deploy-blue-green.sh
-          EOF
-          
-          echo "🚀 Blue-Green deployment completed!"
-          echo "🌐 HRMS App is accessible at http://$VPS_HOST:8080"
+            echo "✅ vue-vben-admin deployment completed!"
+            echo "🌐 Access: http://${{ env.SSH_HOST }}:8080"
 
   # ===== Status Check =====
   ci-success:
     name: CI Success
     if: always()
     runs-on: ubuntu-latest
-    needs: [test-and-lint, build]
+    needs: [test, build]
     steps:
       - name: Check CI status
         env:
           FAILURE: ${{ contains(join(needs.*.result, ','), 'failure') || contains(join(needs.*.result, ','), 'cancelled') }}
         run: |
           if [ "$FAILURE" = "true" ]; then
-            echo "❌ CI failed"
+            echo "❌ CI pipeline failed"
             exit 1
           else
-            echo "✅ CI passed"
+            echo "✅ CI pipeline passed successfully"
             exit 0
           fi

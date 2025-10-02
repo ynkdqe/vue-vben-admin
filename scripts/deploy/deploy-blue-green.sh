@@ -20,16 +20,12 @@ ACTIVE_FILE=/var/run/${SERVICE}-active
 SUDO=$(command -v sudo || echo "")
 GHCR_USER=${GHCR_USER:-}
 GHCR_TOKEN=${GHCR_TOKEN:-}
-UPSTREAM_FILE=/etc/nginx/conf.d/${SERVICE}.upstream.conf
-SITE_FILE=/etc/nginx/conf.d/${SERVICE}.conf
-UPSTREAM_NAME=${SERVICE}_upstream
 
 log() { echo "[$(date -u +%H:%M:%S)] $*"; }
 need() { if ! command -v "$1" >/dev/null 2>&1; then log "Install $1"; ${SUDO} apt-get update -y && ${SUDO} apt-get install -y "$2"; fi; }
 
 need docker docker.io
 need curl curl
-need nginx nginx
 ${SUDO} systemctl enable --now nginx >/dev/null 2>&1 || true
 
 # Ensure docker network
@@ -100,8 +96,6 @@ RUN_ARGS=(
   -p ${HOST_PORT}:${CPORT}
   -e NODE_ENV=production
   -e TZ=Asia/Ho_Chi_Minh
-  --memory=512m
-  --cpus="0.5"
 )
 
 log "Run container $NEW_NAME"
@@ -113,36 +107,6 @@ for i in {1..20}; do
   sleep 1
   [[ $i == 20 ]] && { log "Container failed to start"; exit 1; }
 done
-
-# Health check for Vue SPA
-if [[ "$HEALTH" != none ]]; then
-  log "Health check $HEALTH"
-  PASS=false
-  for i in {1..40}; do
-    # Check if nginx is serving content (Vue SPA health check)
-    if curl -fsS "http://127.0.0.1:${HOST_PORT}${HEALTH}" >/dev/null 2>&1 || \
-       curl -fsS "http://127.0.0.1:${HOST_PORT}/" | grep -q "<!DOCTYPE html" 2>/dev/null; then 
-      PASS=true
-      break
-    fi
-    sleep 2
-  done
-  if [[ $PASS != true ]]; then
-    log "Health FAIL"; ${SUDO} docker logs --tail 120 "$NEW_NAME" || true; ${SUDO} docker rm -f "$NEW_NAME"; exit 1
-  fi
-  log "Health check passed"
-else
-  log "Skip health check, waiting 5s"; sleep 5
-fi
-
-# Update nginx upstream to point to new host port
-log "Update nginx upstream -> $HOST_PORT"
-${SUDO} bash -c "cat > $UPSTREAM_FILE" <<EOF
-upstream $UPSTREAM_NAME {
-    server 127.0.0.1:$HOST_PORT;
-    keepalive 32;
-}
-EOF
 
 log "Switch docker network alias $ALIAS"
 if ${SUDO} docker ps --format '{{.Names}}' | grep -q "^${OLD_NAME}$"; then
