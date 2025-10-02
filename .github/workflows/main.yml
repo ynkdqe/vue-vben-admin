@@ -27,7 +27,8 @@ env:
   SERVICE_NAME: admin-fe-vue
   CONTAINER_PORT: '8080'
   HEALTH_PATH: none
-
+  SSH_HOST: ${{ secrets.VPS_HOST }}
+  SSH_USER: ${{ secrets.VPS_USER }}
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -131,9 +132,9 @@ jobs:
             set -euo pipefail
             
             # Setup deploy script
-            sudo mkdir -p /home/${{ secrets.VPS_USER }}/admin-fe-vue/scripts
-            sudo mv -f /home/${{ secrets.VPS_USER }}/admin-fe-vue/scripts/deploy-blue-green.sh /usr/local/bin/deploy-blue-green.sh || \
-            sudo cp -f /home/${{ secrets.VPS_USER }}/admin-fe-vue/scripts/deploy-blue-green.sh /usr/local/bin/deploy-blue-green.sh
+            sudo mkdir -p /home/${{ env.SSH_USER }}/admin-fe-vue/scripts
+            sudo mv -f /home/${{ env.SSH_USER }}/admin-fe-vue/scripts/deploy-blue-green.sh /usr/local/bin/deploy-blue-green.sh || \
+            sudo cp -f /home/${{ env.SSH_USER }}/admin-fe-vue/scripts/deploy-blue-green.sh /usr/local/bin/deploy-blue-green.sh
             sudo chmod +x /usr/local/bin/deploy-blue-green.sh
             
             # Execute blue-green deployment
@@ -141,4 +142,4 @@ jobs:
             /usr/local/bin/deploy-blue-green.sh "$IMAGE" "$SERVICE" "$CPORT" "$HEALTH"
             
             echo "✅ admin-fe-vue deployment completed!"
-            echo "🌐 Access: http://${{ secrets.VPS_HOST }}:8080"
+            echo "🌐 Access: http://${{ env.SSH_HOST }}:8080"
