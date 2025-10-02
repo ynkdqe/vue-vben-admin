@@ -27,6 +27,8 @@ env:
   SERVICE_NAME: admin-fe-vue
   CONTAINER_PORT: '8080'
   HEALTH_PATH: none
+  SSH_HOST: ${{ secrets.VPS_HOST }}
+  SSH_USER: ${{ secrets.VPS_USER }}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -100,7 +102,7 @@ jobs:
     needs: build
     environment: production
     env:
-      SSH_HOST: ${{ secrets.VPS_IP }}
+      SSH_HOST: ${{ secrets.SSH_HOST }}
       SSH_USER: ${{ secrets.VPS_USER }}
     steps:
       - name: Checkout
