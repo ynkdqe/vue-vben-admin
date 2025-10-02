@@ -129,13 +129,3 @@ fi
 # Cleanup old images
 log "Cleanup old images"
 ${SUDO} docker image prune -f >/dev/null 2>&1 || true
-
-# Final verification
-sleep 2
-if curl -fsS "http://127.0.0.1:${PUBLIC_PORT}/" >/dev/null 2>&1; then
-  log "✅ Deploy SUCCESS -> $NEW_NAME (color: $NEW_COLOR, internal port: $HOST_PORT, public port: $PUBLIC_PORT)"
-  log "🌐 HRMS App is accessible at http://your-domain:$PUBLIC_PORT"
-else
-  log "⚠️  Deploy completed but health check failed on public port $PUBLIC_PORT"
-  exit 1
-fi

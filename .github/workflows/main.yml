@@ -89,7 +89,6 @@ jobs:
             GIT_SHA=${{ github.sha }}
             BUILD_NUMBER=${{ github.run_number }}
           tags: |
-            ${{ env.IMAGE_NAME }}:latest
             ${{ env.IMAGE_NAME }}:${{ github.sha }}
           provenance: false
 
