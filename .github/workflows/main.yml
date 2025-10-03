@@ -116,7 +116,7 @@ jobs:
       - name: Deploy with Blue-Green Strategy
         uses: appleboy/ssh-action@v1.2.0
         env:
-          IMAGE: ${{ env.IMAGE_NAME }}:latest
+          IMAGE: ${{ env.IMAGE_NAME }}:${{ github.sha }}
           SERVICE: ${{ env.SERVICE_NAME }}
           CPORT: ${{ env.CONTAINER_PORT }}
           HEALTH: ${{ env.HEALTH_PATH }}
