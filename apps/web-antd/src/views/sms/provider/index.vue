@@ -3,7 +3,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { Button, Form, Grid, Input, Select, Space, Table, Tag, message } from 'ant-design-vue';
 import type { TableColumnsType } from 'ant-design-vue';
 import { fetchSmsProviderList, type SmsProvider } from '#/api/sms/provider';
-import dayjs from 'dayjs';
+import { formatDateTimeDMY } from '@vben/utils';
 
 const AButton = Button;
 const AForm = Form;
@@ -24,9 +24,7 @@ const dataSource = ref<SmsProvider[]>([]);
 const total = ref(0);
 
 function formatDMY(val?: Date | null | number | string) {
-  if (!val) return '';
-  const d = dayjs(val);
-  return d.isValid() ? d.format('DD-MM-YYYY HH:mm:ss') : '';
+  return formatDateTimeDMY(val, 'DD-MM-YYYY HH:mm:ss');
 }
 
 const columns: TableColumnsType = [
