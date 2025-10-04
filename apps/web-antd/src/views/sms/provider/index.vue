@@ -1,24 +1,9 @@
 <script lang="ts" setup>
-import type { TableColumnsType } from 'ant-design-vue';
-
-import type { SmsProvider } from '#/api/sms/provider';
-
 import { computed, onMounted, reactive, ref, watch } from 'vue';
-
-import {
-  Button,
-  Form,
-  Grid,
-  Input,
-  message,
-  Select,
-  Space,
-  Table,
-  Tag,
-} from 'ant-design-vue';
-import dayjs from 'dayjs';
-
-import { fetchSmsProviderList } from '#/api/sms/provider';
+import { Button, Form, Grid, Input, Select, Space, Table, Tag, message } from 'ant-design-vue';
+import type { TableColumnsType } from 'ant-design-vue';
+import { fetchSmsProviderList, type SmsProvider } from '#/api/sms/provider';
+import { formatDate } from '@vben/utils';
 
 const AButton = Button;
 const AForm = Form;
@@ -33,58 +18,20 @@ const ATag = Tag;
 const screens = Grid.useBreakpoint();
 const isMobile = computed(() => !screens.value?.md);
 
-const query = reactive({
-  keyword: '',
-  status: undefined as number | string | undefined,
-  page: 1,
-  pageSize: 10,
-});
+const query = reactive({ keyword: '', status: undefined as string | number | undefined, page: 1, pageSize: 10 });
 const loading = ref(false);
 const dataSource = ref<SmsProvider[]>([]);
 const total = ref(0);
 
-function formatDMY(val?: Date | null | number | string) {
-  if (!val) return '';
-  const d = dayjs(val);
-  return d.isValid() ? d.format('DD-MM-YYYY HH:mm:ss') : '';
-}
-
 const columns: TableColumnsType = [
   { title: '#', dataIndex: 'id', key: 'id', width: 80 },
   { title: 'Tên', dataIndex: 'name', key: 'name', width: 220 },
-  {
-    title: 'Endpoint',
-    dataIndex: 'providerUrl',
-    key: 'providerUrl',
-    ellipsis: true,
-  },
+  { title: 'Endpoint', dataIndex: 'providerUrl', key: 'providerUrl', ellipsis: true },
   { title: 'Trạng thái', dataIndex: 'status', key: 'status', width: 140 },
-  {
-    title: 'Ngày tạo',
-    dataIndex: 'creationTime',
-    key: 'creationTime',
-    width: 160,
-    customRender: ({ text }) => formatDMY(text),
-  },
-  {
-    title: 'Người tạo',
-    dataIndex: 'creatorName',
-    key: 'creatorName',
-    width: 160,
-  },
-  {
-    title: 'Ngày chỉnh sửa',
-    dataIndex: 'modificationTime',
-    key: 'modificationTime',
-    width: 160,
-    customRender: ({ text }) => formatDMY(text),
-  },
-  {
-    title: 'Cập nhật bởi',
-    dataIndex: 'modifierName',
-    key: 'modifierName',
-    width: 160,
-  },
+  { title: 'Ngày tạo', dataIndex: 'creationTime', key: 'creationTime', width: 160, customRender: ({ text }) => formatDate(text, 'DD-MM-YYYY HH:mm:ss') },
+  { title: 'Người tạo', dataIndex: 'creatorName', key: 'creatorName', width: 160 },
+  { title: 'Ngày chỉnh sửa', dataIndex: 'modificationTime', key: 'modificationTime', width: 160, customRender: ({ text }) => formatDate(text, 'DD-MM-YYYY HH:mm:ss') },
+  { title: 'Cập nhật bởi', dataIndex: 'modifierName', key: 'modifierName', width: 160 },
 ];
 
 async function loadData() {
@@ -98,35 +45,23 @@ async function loadData() {
     });
     dataSource.value = res.items;
     total.value = res.total;
-  } catch (error: any) {
-    message.error(error?.message || 'Không tải được danh sách provider');
+  } catch (err: any) {
+    message.error(err?.message || 'Không tải được danh sách provider');
   } finally {
     loading.value = false;
   }
 }
 
-function handleSearch() {
-  query.page = 1;
-  loadData();
-}
-function handleReset() {
-  query.keyword = '';
-  query.status = undefined;
-  query.page = 1;
-  query.pageSize = 10;
-  loadData();
-}
+function handleSearch() { query.page = 1; loadData(); }
+function handleReset() { query.keyword = ''; query.status = undefined; query.page = 1; query.pageSize = 10; loadData(); }
 
 onMounted(loadData);
-watch(
-  () => [query.page, query.pageSize],
-  () => loadData(),
-);
+watch(() => [query.page, query.pageSize], () => loadData());
 </script>
 
 <template>
   <div class="space-y-4 p-4">
-    <div class="search-card rounded-md p-4 shadow-sm">
+    <div class="rounded-md p-4 shadow-sm search-card">
       <AForm :layout="isMobile ? 'vertical' : 'inline'" @submit.prevent>
         <AFormItem label="Từ khóa" :style="isMobile ? { width: '100%' } : {}">
           <AInput
@@ -138,16 +73,8 @@ watch(
           />
         </AFormItem>
 
-        <AFormItem
-          label="Trạng thái"
-          :style="isMobile ? { width: '100%' } : {}"
-        >
-          <ASelect
-            v-model:value="query.status"
-            allow-clear
-            placeholder="Tất cả"
-            :style="isMobile ? { width: '100%' } : { width: '180px' }"
-          >
+        <AFormItem label="Trạng thái" :style="isMobile ? { width: '100%' } : {}">
+          <ASelect v-model:value="query.status" allow-clear placeholder="Tất cả" :style="isMobile ? { width: '100%' } : { width: '180px' }">
             <ASelectOption value="active">Hoạt động</ASelectOption>
             <ASelectOption value="inactive">Ngừng</ASelectOption>
           </ASelect>
@@ -155,9 +82,7 @@ watch(
 
         <AFormItem :style="isMobile ? { width: '100%' } : {}">
           <ASpace :wrap="true" :style="isMobile ? { width: '100%' } : {}">
-            <AButton :block="isMobile" type="primary" @click="handleSearch">
-              Tìm kiếm
-            </AButton>
+            <AButton :block="isMobile" type="primary" @click="handleSearch">Tìm kiếm</AButton>
             <AButton :block="isMobile" @click="handleReset">Làm mới</AButton>
           </ASpace>
         </AFormItem>
@@ -168,25 +93,13 @@ watch(
       :columns="columns"
       :data-source="dataSource"
       :loading="loading"
-      :pagination="{
-        current: query.page,
-        pageSize: query.pageSize,
-        total,
-        showSizeChanger: true,
-      }"
+      :pagination="{ current: query.page, pageSize: query.pageSize, total, showSizeChanger: true }"
       row-key="id"
-      @change="
-        (p) => {
-          query.page = p.current!;
-          query.pageSize = p.pageSize!;
-        }
-      "
+      @change="(p) => { query.page = p.current!; query.pageSize = p.pageSize!; }"
     >
       <template #bodyCell="{ column, text }">
         <template v-if="column.key === 'status'">
-          <ATag :color="Number(text) === 1 ? 'success' : 'default'">
-            {{ Number(text) === 1 ? 'Hoạt động' : 'Ngừng' }}
-          </ATag>
+          <ATag :color="Number(text) === 1 ? 'success' : 'default'">{{ Number(text) === 1 ? 'Hoạt động' : 'Ngừng' }}</ATag>
         </template>
       </template>
     </ATable>

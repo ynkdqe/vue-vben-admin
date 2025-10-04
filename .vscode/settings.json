@@ -237,5 +237,6 @@
     "nolebase",
     "rollup",
     "vitest"
-  ]
+  ],
+  "postman.settings.dotenv-detection-notification-visibility": false
 }
