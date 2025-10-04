@@ -23,18 +23,14 @@ const loading = ref(false);
 const dataSource = ref<SmsProvider[]>([]);
 const total = ref(0);
 
-function formatDMY(val?: Date | null | number | string) {
-  return formatDate(val as any, 'DD-MM-YYYY HH:mm:ss') as string;
-}
-
 const columns: TableColumnsType = [
   { title: '#', dataIndex: 'id', key: 'id', width: 80 },
   { title: 'Tên', dataIndex: 'name', key: 'name', width: 220 },
   { title: 'Endpoint', dataIndex: 'providerUrl', key: 'providerUrl', ellipsis: true },
   { title: 'Trạng thái', dataIndex: 'status', key: 'status', width: 140 },
-  { title: 'Ngày tạo', dataIndex: 'creationTime', key: 'creationTime', width: 160, customRender: ({ text }) => formatDMY(text) },
+  { title: 'Ngày tạo', dataIndex: 'creationTime', key: 'creationTime', width: 160, customRender: ({ text }) => formatDate(text, 'DD-MM-YYYY HH:mm:ss') },
   { title: 'Người tạo', dataIndex: 'creatorName', key: 'creatorName', width: 160 },
-  { title: 'Ngày chỉnh sửa', dataIndex: 'modificationTime', key: 'modificationTime', width: 160, customRender: ({ text }) => formatDMY(text) },
+  { title: 'Ngày chỉnh sửa', dataIndex: 'modificationTime', key: 'modificationTime', width: 160, customRender: ({ text }) => formatDate(text, 'DD-MM-YYYY HH:mm:ss') },
   { title: 'Cập nhật bởi', dataIndex: 'modifierName', key: 'modifierName', width: 160 },
 ];
 

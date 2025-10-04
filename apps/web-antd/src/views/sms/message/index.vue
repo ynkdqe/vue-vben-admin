@@ -94,7 +94,7 @@ watch(() => [query.page, query.pageSize], () => loadData());
     <div class="rounded-md p-4 shadow-sm search-card">
       <AForm :layout="isMobile ? 'vertical' : 'inline'" @submit.prevent>
         <AFormItem label="Từ khóa" :style="isMobile ? { width: '100%' } : {}">
-          <AInput v-model:value="query.keyword" placeholder="Tìm theo requestId, message..." allow-clear :style="isMobile ? { width: '100%' } : { minWidth: '260px' }" @press-enter="handleSearch" />
+          <AInput v-model:value="query.keyword" placeholder="Tìm theo SĐT, tin nhắn..." allow-clear :style="isMobile ? { width: '100%' } : { minWidth: '260px' }" @press-enter="handleSearch" />
         </AFormItem>
 
         <AFormItem label="Provider" :style="isMobile ? { width: '100%' } : {}">
