@@ -2,7 +2,7 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { Button, Form, Grid, Input, Select, Space, Table, Tag, message } from 'ant-design-vue';
 import type { TableColumnsType } from 'ant-design-vue';
-import { formatDateTimeDMY } from '@vben/utils';
+import { formatDate } from '@vben/utils';
 
 import { fetchSmsMessageList, type SmsMessage } from '#/api/sms/message';
 import { fetchSmsProviderList } from '#/api/sms/provider';
@@ -131,10 +131,10 @@ watch(() => [query.page, query.pageSize], () => loadData());
           <ATag :color="Number(text) === 1 ? 'success' : 'default'">{{ Number(text) === 1 ? 'Thành công' : 'Thất bại' }}</ATag>
         </template>
         <template v-else-if="column.key === 'sendedTime'">
-          {{ formatDateTimeDMY(text) }}
+          {{ formatDate(text, 'DD-MM-YYYY HH:mm:ss') }}
         </template>
         <template v-else-if="column.key === 'creationTime'">
-          {{ formatDateTimeDMY(text) }}
+          {{ formatDate(text, 'DD-MM-YYYY HH:mm:ss') }}
         </template>
       </template>
     </ATable>
