@@ -35,13 +35,11 @@ const emit = defineEmits<{
       </AAvatar>
     </ABadge>
     <div style="flex:1 1 auto; min-width:0">
-      <div style="display:flex; justify-content:space-between; gap:8px">
-        <div style="font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-          {{ title }}
-        </div>
-        <div style="color:#999">{{ date }}</div>
+      <div style="font-weight:600; word-break:break-word; white-space:normal; line-height:1.3;">
+        {{ title }}
       </div>
-      <div style="margin:2px 0 6px; color:#666; font-size:12px">
+      <div style="color:#999; font-size:12px; margin-top:4px;">{{ date }}</div>
+      <div style="margin:4px 0 6px; color:#666; font-size:12px">
         <ATag color="blue">Người gửi: {{ fromUserName || '—' }}</ATag>
       </div>
       <div style="color:#555; white-space:pre-wrap">{{ message }}</div>
