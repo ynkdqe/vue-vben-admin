@@ -40,12 +40,21 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        name: 'SmsNotification',
-        path: '/sms/notification',
-        component: () => import('#/views/sms/notification/index.vue'),
+        name: 'SmsNotificationAdministration',
+        path: '/sms/notification/administration',
+        component: () => import('#/views/sms/notification/administration/index.vue'),
         meta: {
           icon: 'mdi:bell-outline',
-          title: $t('page.sms.notification'),
+          title: $t('page.sms.notification.administration'),
+        },
+      },
+      {
+        name: 'SmsNotificationPersonal',
+        path: '/sms/notification/personal',
+        component: () => import('#/views/sms/notification/personal/index.vue'),
+        meta: {
+          icon: 'mdi:bell-outline',
+          title: $t('page.sms.notification.personal'),
         },
       },
     ],

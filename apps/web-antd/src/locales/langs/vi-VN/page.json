@@ -23,6 +23,10 @@
     "provider": "Nhà cung cấp",
     "template": "Mẫu tin nhắn",
     "message": "Tin nhắn",
-    "notification": "Thông báo"
+    "notification": {
+      "title": "Thông báo",
+      "administration": "Thông báo (Quản trị)",
+      "personal": "Thông báo (Cá nhân)"
+    }
   }
 }

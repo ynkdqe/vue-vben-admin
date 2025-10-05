@@ -23,6 +23,10 @@
     "provider": "提供者",
     "template": "模板",
     "message": "消息",
-    "notification": "通知"
+    "notification": {
+      "title": "通知",
+      "administration": "通知（管理）",
+      "personal": "通知（个人）"
+    }
   }
 }

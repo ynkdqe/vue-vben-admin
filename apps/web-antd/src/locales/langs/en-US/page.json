@@ -23,6 +23,9 @@
     "provider": "Provider",
     "template": "Template",
     "message": "Message",
-    "notification": "Notification"
+    "notification": {
+      "title": "Notification",
+      "administration": "Notification (Administration)",
+      "personal": "Notification (Personal)"}
   }
 }
