@@ -27,7 +27,16 @@ class NotificationHubService {
       .build();
 
     this.connection.on('ReceiveNotification', (data) => {
+      // Ghi log phục vụ debug
       console.log('Received notification:', data);
+      // Phát lại cho tất cả subscriber trong ứng dụng
+      for (const h of this.handlers) {
+        try {
+          h(data);
+        } catch (e) {
+          console.error('[NotificationHub] handler error', e);
+        }
+      }
     });
 
     try {
