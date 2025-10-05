@@ -12,7 +12,7 @@ import {
   startAutoRefreshTokenJob,
   stopAutoRefreshTokenJob,
 } from './utils/auto-refresh-token-job';
-import { startTimeLogger, stopTimeLogger } from './utils/time-logger';
+import { notificationHub } from './services/notification-hub';
 
 defineOptions({ name: 'App' });
 
@@ -21,12 +21,12 @@ const { tokens } = useAntdDesignTokens();
 
 onMounted(() => {
   startAutoRefreshTokenJob();
-  startTimeLogger();
+  notificationHub.start();
 });
 
 onBeforeUnmount(() => {
   stopAutoRefreshTokenJob();
-  stopTimeLogger();
+  notificationHub.stop();
 });
 
 const tokenTheme = computed(() => {
