@@ -19,6 +19,10 @@ interface Props {
    */
   dot?: boolean;
   /**
+   * 未读消息数量
+   */
+  unreadCount?: number;
+  /**
    * 消息列表
    */
   notifications?: NotificationItem[];
@@ -28,6 +32,7 @@ defineOptions({ name: 'NotificationPopup' });
 
 withDefaults(defineProps<Props>(), {
   dot: false,
+  unreadCount: 0,
   notifications: () => [],
 });
 
@@ -69,8 +74,16 @@ function handleClick(item: NotificationItem) {
     <template #trigger>
       <div class="flex-center mr-2 h-full" @click.stop="toggle()">
         <VbenIconButton class="bell-button text-foreground relative">
+          <!-- Hiển thị số lượng thông báo chưa đọc -->
           <span
-            v-if="dot"
+            v-if="unreadCount > 0"
+            class="bg-primary text-primary-foreground absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full text-xs font-medium"
+          >
+            {{ unreadCount > 99 ? '99+' : unreadCount }}
+          </span>
+          <!-- Fallback: hiển thị dot nếu không có unreadCount nhưng có dot -->
+          <span
+            v-else-if="dot"
             class="bg-primary absolute right-0.5 top-0.5 h-2 w-2 rounded"
           ></span>
           <Bell class="size-4" />
