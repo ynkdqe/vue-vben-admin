@@ -3,7 +3,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { Button, Form, Grid, Input, Select, Space, Table, Tag, message } from 'ant-design-vue';
 import type { TableColumnsType } from 'ant-design-vue';
 import { formatDate } from '@vben/utils';
-import { fetchNotificationList, type NotificationItem } from '#/api/sms/notification';
+import { fetchAdminNotificationList, type NotificationItem } from '#/api/sms/notification';
 
 const AButton = Button;
 const AForm = Form;
@@ -30,23 +30,22 @@ const dataSource = ref<NotificationItem[]>([]);
 const total = ref(0);
 
 const columns: TableColumnsType = [
-  { title: '#', dataIndex: 'id', key: 'id', width: 260 },
-  { title: 'Tiêu đề', dataIndex: 'title', key: 'title', width: 320, ellipsis: true },
-  { title: 'Người gửi', dataIndex: 'fromUserName', key: 'fromUserName', width: 160 },
-  { title: 'Người nhận', dataIndex: 'toUserName', key: 'toUserName', width: 160 },
-  { title: 'Trạng thái', dataIndex: 'status', key: 'status', width: 140 },
+  { title: '#', key: 'index', width: 80 },
+  { title: 'Tiêu đề', dataIndex: 'title', key: 'title', width: 300, ellipsis: true },
+  { title: 'Loại thông báo', dataIndex: 'type', key: 'type', width: 140 },
+  { title: 'Người gửi', dataIndex: 'senderName', key: 'senderName', width: 160 },
+  { title: 'Người nhận', key: 'recipients', width: 200 },
   { title: 'Ngày tạo', dataIndex: 'creationTime', key: 'creationTime', width: 200 },
 ];
 
 async function loadData() {
   loading.value = true;
   try {
-    const res = await fetchNotificationList({
+    const res = await fetchAdminNotificationList({
       page: query.page,
       pageSize: query.pageSize,
       keyword: query.keyword?.trim() || undefined,
       status: query.status,
-      isMe: false,
     });
     dataSource.value = res.items;
     total.value = res.total;
@@ -88,10 +87,10 @@ watch(() => [query.page, query.pageSize], () => loadData());
           />
         </AFormItem>
 
-        <AFormItem label="Trạng thái" :style="isMobile ? { width: '100%' } : {}">
+        <AFormItem label="Loại thông báo" :style="isMobile ? { width: '100%' } : {}">
           <ASelect v-model:value="query.status" allow-clear placeholder="Tất cả" :style="isMobile ? { width: '100%' } : { width: '180px' }">
-            <ASelectOption :value="0">Chưa đọc</ASelectOption>
-            <ASelectOption :value="1">Đã đọc</ASelectOption>
+            <ASelectOption :value="0">Cá nhân</ASelectOption>
+            <ASelectOption :value="1">Công khai</ASelectOption>
           </ASelect>
         </AFormItem>
 
@@ -112,12 +111,35 @@ watch(() => [query.page, query.pageSize], () => loadData());
       row-key="id"
       @change="(p) => { query.page = p.current!; query.pageSize = p.pageSize!; }"
     >
-      <template #bodyCell="{ column, text }">
-        <template v-if="column.key === 'status'">
-          <ATag :color="Number(text) === 1 ? 'success' : 'default'">{{ Number(text) === 1 ? 'Đã đọc' : 'Chưa đọc' }}</ATag>
+      <template #bodyCell="{ column, record, index }">
+        <template v-if="column.key === 'index'">
+          {{ (query.page - 1) * query.pageSize + index + 1 }}
+        </template>
+        <template v-else-if="column.key === 'type'">
+          <ATag :color="record.type === 1 ? 'blue' : 'green'">
+            {{ record.type === 1 ? 'Công khai' : 'Cá nhân' }}
+          </ATag>
+        </template>
+        <template v-else-if="column.key === 'recipients'">
+          <div v-if="record.type === 1" class="text-blue-600 font-medium">
+            Toàn bộ
+          </div>
+          <div v-else-if="record.type === 0 && record.notificationUsers?.length > 0">
+            <div class="space-y-1">
+              <div v-for="user in record.notificationUsers.slice(0, 2)" :key="user.id" class="text-sm">
+                {{ user.name }} ({{ user.userName }})
+              </div>
+              <div v-if="record.notificationUsers.length > 2" class="text-xs text-gray-500">
+                +{{ record.notificationUsers.length - 2 }} người khác
+              </div>
+            </div>
+          </div>
+          <div v-else class="text-gray-400">
+            Không có người nhận
+          </div>
         </template>
         <template v-else-if="column.key === 'creationTime'">
-          {{ formatDate(text, 'DD-MM-YYYY HH:mm:ss') }}
+          {{ formatDate(record.creationTime, 'DD-MM-YYYY HH:mm:ss') }}
         </template>
       </template>
     </ATable>

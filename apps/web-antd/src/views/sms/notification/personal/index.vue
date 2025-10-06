@@ -2,7 +2,7 @@
 import { onMounted, onBeforeUnmount, ref, reactive, computed } from 'vue';
 import { App as AntApp, List, Pagination, Skeleton, Form, Input, Select, DatePicker, Button, Grid, Space, Checkbox, Popconfirm } from 'ant-design-vue';
 import { formatDate } from '@vben/utils';
-import { fetchNotificationList, type NotificationItem } from '#/api/sms/notification';
+import { fetchNotificationList, type NotificationUserItem } from '#/api/sms/notification';
 import NotificationListItem from './components/NotificationListItem.vue';
 import type { Dayjs } from 'dayjs';
 
@@ -30,8 +30,8 @@ type UiNotification = {
   title: string;
   message: string;
   date: string;
-  fromUserName?: string;
-  raw: NotificationItem;
+  senderName?: string | null;
+  raw: NotificationUserItem;
 };
 
 const list = ref<UiNotification[]>([]);
@@ -50,16 +50,16 @@ const query = reactive({
 const screens = Grid.useBreakpoint();
 const isMobile = computed(() => !screens.value?.md);
 
-function mapToUiItem(n: NotificationItem): UiNotification {
+function mapToUiItem(n: NotificationUserItem): UiNotification {
   return {
     id: n?.id ?? crypto.randomUUID?.() ?? String(Math.random()),
     avatar: n?.icon || undefined,
-    isRead: Number(n?.status) === 1,
+    isRead: n.status === 1,
     title: n?.title ?? 'Thông báo',
     message: n?.message ?? '',
     date: n?.creationTime ? ((formatDate(n.creationTime, 'DD-MM-YYYY HH:mm:ss') as string) || '') : '',
-    fromUserName: n?.fromUserName,
-    raw: n as NotificationItem,
+    senderName: n?.senderName,
+    raw: n as NotificationUserItem,
   };
 }
 
@@ -80,11 +80,12 @@ async function loadData() {
       pageSize: query.pageSize,
       keyword: query.keyword?.trim() || undefined,
       status: query.status === '' ? undefined : query.status,
-      isMe: true,
       ...getDateParams(),
     });
     total.value = res.total;
-    list.value = Array.isArray(res.items) ? res.items.map(mapToUiItem) : [];
+    list.value = Array.isArray(res.items)
+      ? (res.items).map(mapToUiItem)
+      : [];
   } catch (err: any) {
     message.error(err?.message || 'Không tải được danh sách thông báo');
   } finally {
@@ -144,7 +145,7 @@ async function handleToggleRead(item: UiNotification) {
   try {
     const toStatus = item.isRead ? 0 : 1;
     const { updateNotificationStatus } = await import('#/api/sms/notification');
-    await updateNotificationStatus(item.id, toStatus as 0 | 1);
+    await updateNotificationStatus([item.id], toStatus as 0 | 1);
     item.isRead = !item.isRead;
     message.success(item.isRead ? 'Đã đánh dấu đã đọc' : 'Đã đánh dấu chưa đọc');
   } catch (err: any) {
@@ -184,8 +185,8 @@ async function handleMarkSelected(status: 0 | 1) {
   const ids = Array.from(selectedIds.value);
   if (ids.length === 0) return;
   try {
-    const { updateNotificationsStatus } = await import('#/api/sms/notification');
-    await updateNotificationsStatus(ids, status);
+    const { updateNotificationStatus } = await import('#/api/sms/notification');
+    await updateNotificationStatus(ids, status);
     list.value = list.value.map((n) => (selectedIds.value.has(n.id) ? { ...n, isRead: status === 1 } : n));
     message.success(status === 1 ? 'Đã đánh dấu đã đọc' : 'Đã đánh dấu chưa đọc');
   } catch (err: any) {
@@ -249,7 +250,6 @@ async function handleMarkSelected(status: 0 | 1) {
         </div>
         <div :style="{ display:'flex', gap:'8px', flexWrap:'wrap' }">
           <AButton :disabled="!hasSelection" @click="() => handleMarkSelected(1)" :block="isMobile">Đánh dấu tất cả đã đọc</AButton>
-          <AButton :disabled="!hasSelection" @click="() => handleMarkSelected(0)" :block="isMobile">Đánh dấu tất cả chưa đọc</AButton>
           <APopconfirm
             v-if="hasSelection"
             title="Bạn có chắc muốn xóa các thông báo đã chọn?"
@@ -275,7 +275,7 @@ async function handleMarkSelected(status: 0 | 1) {
                   :title="item.title"
                   :message="item.message"
                   :date="item.date"
-                  :from-user-name="item.fromUserName"
+                  :senderName="item.senderName"
                   @toggleRead="() => handleToggleRead(item)"
                   @delete="() => handleDeleteOne(item)"
                 />

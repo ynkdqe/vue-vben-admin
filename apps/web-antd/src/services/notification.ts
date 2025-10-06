@@ -1,6 +1,6 @@
 import type { NotificationItem as LayoutNotificationItem } from '@vben/layouts';
 
-import type { NotificationItem as ApiNotificationItem } from '#/api/sms/notification';
+import type { NotificationUserItem as ApiNotificationItem } from '#/api/sms/notification';
 
 import { computed, ref } from 'vue';
 
@@ -109,7 +109,6 @@ class NotificationService {
         page: params.page || 1,
         pageSize: params.pageSize || 20,
         status: params.status,
-        isMe: true, // Only load notifications for current user
       });
 
       this.notifications.value = result.items.map((item) =>
@@ -137,16 +136,15 @@ class NotificationService {
       // Update UI immediately for better UX
       unreadNotifications.forEach((n) => (n.isRead = true));
 
-      // Update on server in parallel
-      const promises = unreadNotifications.map((n) =>
-        updateNotificationStatus(n.id, 1).catch((error) => {
-          console.error(`Failed to mark notification ${n.id} as read:`, error);
-          // Revert UI change on error
-          n.isRead = false;
-        }),
-      );
-
-      await Promise.allSettled(promises);
+      // Update on server
+      const unreadIds = unreadNotifications.map((n) => n.id);
+      try {
+        await updateNotificationStatus(unreadIds, 1);
+      } catch (error) {
+        console.error('Failed to mark notifications as read:', error);
+        // Revert UI changes on error
+        unreadNotifications.forEach((n) => (n.isRead = false));
+      }
     } catch (error) {
       console.error('Failed to mark all notifications as read:', error);
       throw error;
@@ -158,7 +156,7 @@ class NotificationService {
    */
   async markAsRead(notificationId: string) {
     try {
-      await updateNotificationStatus(notificationId, 1);
+      await updateNotificationStatus([notificationId], 1);
 
       const notification = this.notifications.value.find(
         (n) => n.id === notificationId,

@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { computed, watch } from 'vue';
+import { useRouter } from 'vue-router';
 
 import { AuthenticationLoginExpiredModal } from '@vben/common-ui';
 import { VBEN_DOC_URL, VBEN_GITHUB_URL } from '@vben/constants';
@@ -23,6 +24,7 @@ import { $t } from '#/locales';
 import { useAuthStore } from '#/store';
 import LoginForm from '#/views/_core/authentication/login.vue';
 
+const router = useRouter();
 const userStore = useUserStore();
 const authStore = useAuthStore();
 const accessStore = useAccessStore();
@@ -88,9 +90,14 @@ async function handleMakeAll() {
 }
 
 async function handleNotificationRead(notification: any) {
+  debugger;
   if (!notification.isRead) {
     await markAsRead(notification.id);
   }
+}
+
+function handleViewAll() {
+  router.push('/sms/notification/personal');
 }
 watch(
   () => preferences.app.watermark,
@@ -129,6 +136,7 @@ watch(
         @clear="handleNoticeClear"
         @make-all="handleMakeAll"
         @read="handleNotificationRead"
+        @view-all="handleViewAll"
       />
     </template>
     <template #extra>

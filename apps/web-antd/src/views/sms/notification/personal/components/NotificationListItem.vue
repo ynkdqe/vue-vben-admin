@@ -13,18 +13,18 @@ type Props = {
   title?: string;
   message?: string;
   date?: string;
-  fromUserName?: string;
+  senderName?: string;
 };
 
 withDefaults(defineProps<Props>(), {
   isRead: true,
 });
-
 const emit = defineEmits<{
   (e: 'toggleRead'): void;
   (e: 'delete'): void;
   (e: 'select', checked: boolean): void;
 }>();
+
 </script>
 
 <template>
@@ -40,7 +40,7 @@ const emit = defineEmits<{
       </div>
       <div style="color:#999; font-size:12px; margin-top:4px;">{{ date }}</div>
       <div style="margin:4px 0 6px; color:#666; font-size:12px">
-        <ATag color="blue">Người gửi: {{ fromUserName || '—' }}</ATag>
+        <ATag color="blue">Người gửi: {{ senderName || '—' }}</ATag>
       </div>
       <div style="color:#555; white-space:pre-wrap">{{ message }}</div>
       <div style="margin-top:8px">
