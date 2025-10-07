@@ -79,7 +79,7 @@ Hệ thống tích hợp với các API endpoints sau:
 
 ## Tích Hợp SignalR
 
-Hệ thống kết nối với SignalR hub tại `/hub/app` và lắng nghe sự kiện `ReceiveNotification`. Khi nhận được thông báo mới:
+Hệ thống kết nối với SignalR hub tại `/hub/app` và lắng nghe sự kiện `HubMessage`. Khi nhận được thông báo mới:
 
 1. Thêm vào danh sách thông báo
 2. Hiển thị thông báo trình duyệt (nếu được cấp quyền)
@@ -104,7 +104,7 @@ URL SignalR hub được cấu hình qua biến môi trường `VITE_GLOB_API_UR
 
 1. **Khởi tạo**: Khi layout load, notification service bắt đầu và kết nối SignalR hub
 2. **Tải dữ liệu**: Lấy thông báo ban đầu từ API
-3. **Cập nhật real-time**: Lắng nghe sự kiện `ReceiveNotification` từ SignalR hub
+3. **Cập nhật real-time**: Lắng nghe sự kiện `HubMessage` từ SignalR hub
 4. **Cập nhật UI**: Tự động cập nhật danh sách thông báo và hiển thị thông báo trình duyệt
 5. **Hành động người dùng**: Xử lý đánh dấu thông báo đã đọc, xóa thông báo, v.v.
 

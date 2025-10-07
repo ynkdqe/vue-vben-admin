@@ -2,15 +2,15 @@ import { requestClient } from '#/api/request';
 
 export interface NotificationItem {
   id: string;
-  senderId: string | null;
-  senderUserName: string | null;
+  senderId: null | string;
+  senderUserName: null | string;
   senderName: string;
   title: string;
   message: string;
   icon: string;
   url: string;
   type: number; // 0: Cá nhân, 1: Công khai
-  creatorId: string | null;
+  creatorId: null | string;
   creationTime: string;
   creatorName: string;
   notificationUser: NotificationUserItem | null;
@@ -20,20 +20,20 @@ export interface NotificationItem {
 export interface NotificationUserItem {
   id: string;
   notificationId: string;
-  userId: string | null;
+  userId: null | string;
   name: string;
-  userName: string | null;
+  userName: null | string;
   status: number;
-  reatAt: string | null;
-  senderId: string | null;
-  senderUserName: string | null;
+  reatAt: null | string;
+  senderId: null | string;
+  senderUserName: null | string;
   senderName: string;
   title: string;
   message: string;
   icon: string;
   url: string;
   type: number; // 0: Cá nhân, 1: Công khai
-  creatorId: string | null;
+  creatorId: null | string;
   creationTime: string;
   creatorName: string;
   totalCount: number;
@@ -58,38 +58,57 @@ export interface NotificationListResult {
 
 function normalize(res: any): NotificationListResult {
   const body = res;
-  const itemsField = (body?.data || body?.items || body?.records || body?.list) as any[] | undefined;
-  const items: NotificationItem[] = Array.isArray(itemsField) ? (itemsField as any) : [];
-  const total = Number(body?.total ?? body?.totalCount ?? body?.count ?? items.length) || 0;
-  const current = Number(body?.current ?? body?.pageIndex ?? body?.pageNumber ?? 1) || 1;
-  const pageSize = Number(body?.pageSize ?? body?.size ?? body?.pageSizeValue ?? 20) || 20;
+  const itemsField = (body?.data ||
+    body?.items ||
+    body?.records ||
+    body?.list) as any[] | undefined;
+  const items: NotificationItem[] = Array.isArray(itemsField)
+    ? (itemsField as any)
+    : [];
+  const total =
+    Number(body?.total ?? body?.totalCount ?? body?.count ?? items.length) || 0;
+  const current =
+    Number(body?.current ?? body?.pageIndex ?? body?.pageNumber ?? 1) || 1;
+  const pageSize =
+    Number(body?.pageSize ?? body?.size ?? body?.pageSizeValue ?? 20) || 20;
   const totalUnread = body?.dataExtend?.totalUnread;
   return { items, total, current, pageSize, totalUnread };
 }
 
 function normalizeUser(res: any): NotificationUserListResult {
   const body = res;
-  const itemsField = (body?.data || body?.items || body?.records || body?.list) as any[] | undefined;
-  const items: NotificationUserItem[] = Array.isArray(itemsField) ? (itemsField as any) : [];
-  const total = Number(body?.total ?? body?.totalCount ?? body?.count ?? items.length) || 0;
-  const current = Number(body?.current ?? body?.pageIndex ?? body?.pageNumber ?? 1) || 1;
-  const pageSize = Number(body?.pageSize ?? body?.size ?? body?.pageSizeValue ?? 20) || 20;
+  const itemsField = (body?.data ||
+    body?.items ||
+    body?.records ||
+    body?.list) as any[] | undefined;
+  const items: NotificationUserItem[] = Array.isArray(itemsField)
+    ? (itemsField as any)
+    : [];
+  const total =
+    Number(body?.total ?? body?.totalCount ?? body?.count ?? items.length) || 0;
+  const current =
+    Number(body?.current ?? body?.pageIndex ?? body?.pageNumber ?? 1) || 1;
+  const pageSize =
+    Number(body?.pageSize ?? body?.size ?? body?.pageSizeValue ?? 20) || 20;
   const totalUnread = body?.dataExtend?.totalUnread;
   return { items, total, current, pageSize, totalUnread };
 }
-export async function fetchNotificationList(params: {
-  page?: number;
-  pageSize?: number;
-  keyword?: string;
-  status?: number | string;
-  startDate?: string; // ISO string
-  endDate?: string; // ISO string
-} = {}) {
+export async function fetchNotificationList(
+  params: {
+    endDate?: string; // ISO string
+    keyword?: string;
+    page?: number;
+    pageSize?: number;
+    startDate?: string; // ISO string
+    status?: number | string;
+  } = {},
+) {
   const query: Record<string, any> = {
     current: params.page ?? 1,
     pageSize: params.pageSize ?? 20,
   };
-  if (params.keyword && params.keyword.trim()) query.keyword = params.keyword.trim();
+  if (params.keyword && params.keyword.trim())
+    query.keyword = params.keyword.trim();
   if (params.status !== undefined) query.status = params.status;
   if (params.startDate) query.startDate = params.startDate;
   if (params.endDate) query.endDate = params.endDate;
@@ -100,19 +119,22 @@ export async function fetchNotificationList(params: {
   return normalizeUser(res);
 }
 
-export async function fetchAdminNotificationList(params: {
-  page?: number;
-  pageSize?: number;
-  keyword?: string;
-  status?: number | string;
-  startDate?: string; // ISO string
-  endDate?: string; // ISO string
-} = {}) {
+export async function fetchAdminNotificationList(
+  params: {
+    endDate?: string; // ISO string
+    keyword?: string;
+    page?: number;
+    pageSize?: number;
+    startDate?: string; // ISO string
+    status?: number | string;
+  } = {},
+) {
   const query: Record<string, any> = {
     current: params.page ?? 1,
     pageSize: params.pageSize ?? 20,
   };
-  if (params.keyword && params.keyword.trim()) query.keyword = params.keyword.trim();
+  if (params.keyword && params.keyword.trim())
+    query.keyword = params.keyword.trim();
   if (params.status !== undefined) query.status = params.status;
   if (params.startDate) query.startDate = params.startDate;
   if (params.endDate) query.endDate = params.endDate;
@@ -143,6 +165,24 @@ export async function deleteNotifications(ids: string[]) {
   // POST /api/sms/notification/batch-delete { ids }
   return requestClient.post(`/api/sms/notification/batch-delete`, {
     data: { ids },
+    responseReturn: 'body',
+  } as any);
+}
+
+// ---------------- Create Notification ----------------
+export interface NotificationCreateDto {
+  senderId?: null | string;
+  receiverIds?: null | string[];
+  title: string;
+  message: string;
+  icon?: null | string;
+  url?: null | string;
+  type: number; // 0: Private, 1: Public
+  isSystem: boolean;
+}
+
+export async function createNotification(payload: NotificationCreateDto) {
+  return requestClient.post(`/api/sms/notification`, payload, {
     responseReturn: 'body',
   } as any);
 }

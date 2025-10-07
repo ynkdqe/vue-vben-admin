@@ -1,6 +1,8 @@
 import type { HubConnection } from '@microsoft/signalr';
-import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
+
 import { useAccessStore } from '@vben/stores';
+
+import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
 
 type NotificationHandler = (data: any) => void;
 
@@ -26,15 +28,17 @@ class NotificationHubService {
       .configureLogging(LogLevel.Information)
       .build();
 
-    this.connection.on('ReceiveNotification', (data) => {
-      // Ghi log phục vụ debug
-      console.log('Received notification:', data);
+    // Avoid duplicate binding if HMR or reconnect logic reuses the instance
+    this.connection.off('HubMessage');
+    this.connection.on('HubMessage', (data) => {
+      // Ghi log phục vụ debug (use warn to satisfy lint rule)
+      console.warn('HubMessage:', data);
       // Phát lại cho tất cả subscriber trong ứng dụng
       for (const h of this.handlers) {
         try {
           h(data);
-        } catch (e) {
-          console.error('[NotificationHub] handler error', e);
+        } catch (error) {
+          console.error('[NotificationHub] handler error', error);
         }
       }
     });
@@ -42,9 +46,9 @@ class NotificationHubService {
     try {
       await this.connection.start();
       this.started = true;
-      console.info('[NotificationHub] connected');
-    } catch (err) {
-      console.error('[NotificationHub] failed to connect', err);
+      console.warn('[NotificationHub] connected');
+    } catch (error) {
+      console.error('[NotificationHub] failed to connect', error);
     }
   }
 
@@ -52,9 +56,16 @@ class NotificationHubService {
     if (this.connection && this.started) {
       await this.connection.stop();
       this.started = false;
-      console.info('[NotificationHub] disconnected');
+      console.warn('[NotificationHub] disconnected');
     }
   }
 }
 
-export const notificationHub = new NotificationHubService();
+// Ensure true singleton across HMR
+const g = globalThis as unknown as {
+  __notificationHub?: NotificationHubService;
+};
+if (!g.__notificationHub) {
+  g.__notificationHub = new NotificationHubService();
+}
+export const notificationHub = g.__notificationHub as NotificationHubService;
