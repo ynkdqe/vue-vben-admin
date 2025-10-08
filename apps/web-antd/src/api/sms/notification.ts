@@ -13,18 +13,16 @@ export interface NotificationItem {
   creatorId: null | string;
   creationTime: string;
   creatorName: string;
-  notificationUser: NotificationUserItem | null;
-  notificationUsers: NotificationUserItem[];
+  notificationReceivers: NotificationUserItem | null;
 }
 
 export interface NotificationUserItem {
   id: string;
-  notificationId: string;
   userId: null | string;
   name: string;
   userName: null | string;
   status: number;
-  reatAt: null | string;
+  readAt: null | string;
   senderId: null | string;
   senderUserName: null | string;
   senderName: string;
@@ -40,6 +38,13 @@ export interface NotificationUserItem {
   unreadCount: number;
 }
 
+export interface NotificationReceivers {
+  userId: string;
+  name: string;
+  userName: string;
+  status: number; // 0: Chưa đọc, 1: Đã đọc
+  readAt: null | string; // ISO string
+}
 export interface NotificationUserListResult {
   items: NotificationUserItem[];
   total: number;
@@ -148,7 +153,7 @@ export async function fetchAdminNotificationList(
 // TODO: Confirm endpoints with backend. Adjust paths/body if needed.
 export async function updateNotificationStatus(ids: string[], status: 0 | 1) {
   // POST /api/sms/notification-user/status { ids, status }
-  return requestClient.post(`/api/sms/notification-user/status`, {
+  return requestClient.post(`/api/sms/notification/status`, {
     ids,
     status,
     responseReturn: 'body',

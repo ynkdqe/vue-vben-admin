@@ -263,22 +263,22 @@ async function handleSend() {
           </div>
           <div
             v-else-if="
-              record.type === 0 && record.notificationUsers?.length > 0
+              record.type === 0 && record.notificationReceivers?.length > 0
             "
           >
             <div class="space-y-1">
               <div
-                v-for="user in record.notificationUsers.slice(0, 2)"
+                v-for="user in record.notificationReceivers.slice(0, 2)"
                 :key="user.id"
                 class="text-sm"
               >
                 {{ user.name }} ({{ user.userName }})
               </div>
               <div
-                v-if="record.notificationUsers.length > 2"
+                v-if="record.notificationReceivers.length > 2"
                 class="text-xs text-gray-500"
               >
-                +{{ record.notificationUsers.length - 2 }} người khác
+                +{{ record.notificationReceivers.length - 2 }} người khác
               </div>
             </div>
           </div>

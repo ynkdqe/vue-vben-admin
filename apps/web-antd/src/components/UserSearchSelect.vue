@@ -36,11 +36,7 @@ const loading = ref(false);
 let timer: any = null;
 
 function normalize(res: any): Option[] {
-  const list = Array.isArray(res?.items)
-    ? res.items
-    : (Array.isArray(res)
-      ? res
-      : []);
+  const list = Array.isArray(res?.items) ? res.items : [];
   return list
     .map((u: any) => ({
       label: `${u?.name || u?.userName || u?.email || 'Unknown'}${u?.userName ? ` (${u.userName})` : ''}`,

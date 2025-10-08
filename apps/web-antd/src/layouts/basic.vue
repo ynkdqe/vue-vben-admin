@@ -90,7 +90,6 @@ async function handleMakeAll() {
 }
 
 async function handleNotificationRead(notification: any) {
-  debugger;
   if (!notification.isRead) {
     await markAsRead(notification.id);
   }
