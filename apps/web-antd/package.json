@@ -26,6 +26,7 @@
     "#/*": "./src/*"
   },
   "dependencies": {
+    "@ant-design/icons-vue": "^7.0.1",
     "@microsoft/signalr": "^9.0.6",
     "@vben/access": "workspace:*",
     "@vben/common-ui": "workspace:*",
