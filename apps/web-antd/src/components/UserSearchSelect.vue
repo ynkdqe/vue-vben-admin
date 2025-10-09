@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 
 import { Select } from 'ant-design-vue';
 
@@ -36,7 +36,7 @@ const loading = ref(false);
 let timer: any = null;
 
 function normalize(res: any): Option[] {
-  const list = Array.isArray(res?.items) ? res.items : [];
+  const list = Array.isArray(res?.data) ? res.data : Array.isArray(res?.items) ? res.items : [];
   return list
     .map((u: any) => ({
       label: `${u?.name || u?.userName || u?.email || 'Unknown'}${u?.userName ? ` (${u.userName})` : ''}`,
@@ -46,8 +46,8 @@ function normalize(res: any): Option[] {
 }
 
 async function fetchUsers(keyword: string) {
-  return requestClient.get<any>('/api/identity/users', {
-    params: { Filter: keyword || undefined },
+  return requestClient.get<any>('/api/identity/users/_search', {
+    params: { Keyword: keyword || undefined },
     responseReturn: 'body',
   });
 }
@@ -71,6 +71,10 @@ function onChange(v: any) {
   emit('update:modelValue', v);
   emit('change', v);
 }
+
+onBeforeUnmount(() => {
+  if (timer) clearTimeout(timer);
+});
 </script>
 
 <template>
