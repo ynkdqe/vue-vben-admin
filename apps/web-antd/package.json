@@ -47,6 +47,7 @@
     "pinia": "catalog:",
     "toad-scheduler": "^3.1.0",
     "vue": "catalog:",
+    "vue-grid-layout-v3": "^3.1.2",
     "vue-router": "catalog:"
   }
 }
