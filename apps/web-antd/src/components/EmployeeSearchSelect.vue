@@ -16,7 +16,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'update:modelValue', v: string | string[] | undefined): void;
-  (e: 'change', v: string | string[] | undefined): void;
+  (e: 'change', v: string | string[] | undefined, option?: any): void;
 }>();
 
 const ASelect = Select;
@@ -30,7 +30,16 @@ watch(
   (v) => (innerValue.value = v),
 );
 
-type Option = { label: string; value: string };
+type Option = {
+  birthDate: Date | null;
+  email: string;
+  identification: string;
+  label: string;
+  name: string;
+  phone: string;
+  userName: string;
+  value: number;
+}; // name before value
 const options = ref<Option[]>([]);
 const loading = ref(false);
 let timer: any = null;
@@ -47,13 +56,19 @@ function normalize(res: any): Option[] {
   return list
     .map((u: any) => ({
       label: `${u?.name || u?.userName || u?.email || 'Unknown'}${u?.userName ? ` (${u.userName})` : ''}`,
-      value: String(u?.id ?? u?.userId ?? ''),
+      name: u?.name || u?.userName || u?.email || 'Unknown',
+      userName: u?.userName,
+      email: u?.email || '',
+      phone: u?.phone || '',
+      identification: u?.identification || '',
+      birthDate: u?.birthDate ? new Date(u.birthDate) : null,
+      value: Number(u?.id),
     }))
     .filter((o: any) => o.value);
 }
 
-async function fetchUsers(keyword: string) {
-  return requestClient.get<any>('/api/identity/users/_search', {
+async function fetchEmployees(keyword: string) {
+  return requestClient.get<any>('/api/hrms/employee/_search', {
     params: { Keyword: keyword || undefined },
     responseReturn: 'body',
   });
@@ -64,7 +79,7 @@ function onSearch(value: string) {
   timer = setTimeout(async () => {
     loading.value = true;
     try {
-      const res = await fetchUsers(value);
+      const res = await fetchEmployees(value);
       options.value = normalize(res);
     } catch {
       options.value = [];
@@ -74,9 +89,9 @@ function onSearch(value: string) {
   }, props.debounceMs ?? 300);
 }
 
-function onChange(v: any) {
+function onChange(v: any, option: any) {
   emit('update:modelValue', v);
-  emit('change', v);
+  emit('change', v, option);
 }
 
 onBeforeUnmount(() => {
@@ -93,7 +108,7 @@ onBeforeUnmount(() => {
     :options="options"
     :loading="loading"
     :placeholder="
-      placeholder || (isMultiple ? 'Chọn nhiều người dùng' : 'Chọn người dùng')
+      placeholder || (isMultiple ? 'Chọn nhiều nhân viên' : 'Chọn nhân viên')
     "
     :disabled="disabled"
     :allow-clear="allowClear !== false"

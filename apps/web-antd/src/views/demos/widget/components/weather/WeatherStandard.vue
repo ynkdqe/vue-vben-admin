@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
+
 import { usePreferences } from '@vben/preferences';
 
 interface WeatherData {
@@ -19,23 +20,23 @@ interface WeatherData {
 }
 
 const { isDark } = usePreferences();
-const weatherData = ref<WeatherData | null>(null);
+const weatherData = ref<null | WeatherData>(null);
 const loading = ref(true);
-const error = ref<string | null>(null);
+const error = ref<null | string>(null);
 const currentTime = ref('');
 const currentDate = ref('');
 
 // Update current time
 const updateTime = () => {
   const now = new Date();
-  currentTime.value = now.toLocaleTimeString('vi-VN', { 
-    hour: '2-digit', 
-    minute: '2-digit'
+  currentTime.value = now.toLocaleTimeString('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
   });
-  currentDate.value = now.toLocaleDateString('vi-VN', { 
-    weekday: 'long', 
-    month: 'long', 
-    day: 'numeric' 
+  currentDate.value = now.toLocaleDateString('vi-VN', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
   });
 };
 
@@ -45,56 +46,58 @@ let timeInterval: number;
 const fetchWeatherData = () => {
   loading.value = true;
   error.value = null;
-  
   // Get user's location
-  navigator.geolocation.getCurrentPosition((position) => {
-    const lat = position.coords.latitude;
-    const lon = position.coords.longitude;
-    
-    const apiKey = "1c239fd06dc7433cbb1c83b3e9937a1b";
-    const url = `https://api.weatherbit.io/v2.0/current?lat=${lat}&lon=${lon}&lang=vi&key=${apiKey}`;
-    
-    fetch(url)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data.data && data.data.length > 0) {
-          const weatherInfo = data.data[0];
-          
-          weatherData.value = {
-            location: weatherInfo.city_name,
-            temperature: Math.round(weatherInfo.temp),
-            condition: weatherInfo.weather.description,
-            description: weatherInfo.weather.description,
-            icon: weatherInfo.weather.icon,
-            humidity: weatherInfo.rh,
-            windSpeed: Math.round(weatherInfo.wind_spd * 3.6),
-            feelsLike: Math.round(weatherInfo.app_temp),
-            pressure: weatherInfo.pres,
-            visibility: weatherInfo.vis,
-            uv: weatherInfo.uv,
-            sunrise: weatherInfo.sunrise,
-            sunset: weatherInfo.sunset
-          };
-        } else {
-          throw new Error('No weather data available');
-        }
-        loading.value = false;
-      })
-      .catch(error => { 
-        console.error('Error fetching weather data:', error);
-        error.value = 'Không thể tải dữ liệu thời tiết';
-        loading.value = false;
-      });
-  }, (geolocationError) => {
-    console.error('Geolocation error:', geolocationError);
-    error.value = 'Không thể lấy vị trí. Vui lòng bật dịch vụ định vị.';
-    loading.value = false;
-  });
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+
+      const apiKey = '1c239fd06dc7433cbb1c83b3e9937a1b';
+      const url = `https://api.weatherbit.io/v2.0/current?lat=${lat}&lon=${lon}&lang=vi&key=${apiKey}`;
+
+      fetch(url)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          if (data.data && data.data.length > 0) {
+            const weatherInfo = data.data[0];
+
+            weatherData.value = {
+              location: weatherInfo.city_name,
+              temperature: Math.round(weatherInfo.temp),
+              condition: weatherInfo.weather.description,
+              description: weatherInfo.weather.description,
+              icon: weatherInfo.weather.icon,
+              humidity: weatherInfo.rh,
+              windSpeed: Math.round(weatherInfo.wind_spd * 3.6),
+              feelsLike: Math.round(weatherInfo.app_temp),
+              pressure: weatherInfo.pres,
+              visibility: weatherInfo.vis,
+              uv: weatherInfo.uv,
+              sunrise: weatherInfo.sunrise,
+              sunset: weatherInfo.sunset,
+            };
+          } else {
+            throw new Error('No weather data available');
+          }
+          loading.value = false;
+        })
+        .catch((error_) => {
+          console.error('Error fetching weather data:', error_);
+          error.value = 'Không thể tải dữ liệu thời tiết';
+          loading.value = false;
+        });
+    },
+    (geolocationError) => {
+      console.error('Geolocation error:', geolocationError);
+      error.value = 'Không thể lấy vị trí. Vui lòng bật dịch vụ định vị.';
+      loading.value = false;
+    },
+  );
 };
 
 // Refresh weather data
@@ -106,7 +109,7 @@ const refreshWeather = () => {
 const widgetStyle = computed(() => ({
   backgroundColor: isDark.value ? 'hsl(var(--card))' : '#ffffff',
   border: `1px solid ${isDark.value ? 'hsl(var(--border))' : '#e5e7eb'}`,
-  boxShadow: isDark.value 
+  boxShadow: isDark.value
     ? '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
     : '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
 }));
@@ -114,7 +117,8 @@ const widgetStyle = computed(() => ({
 onMounted(() => {
   fetchWeatherData();
   updateTime();
-  timeInterval = setInterval(updateTime, 1000);
+  // In browser, setInterval returns a number; cast to number to satisfy TS
+  timeInterval = window.setInterval(updateTime, 1000) as unknown as number;
 });
 
 onUnmounted(() => {
@@ -130,13 +134,13 @@ onUnmounted(() => {
       <div class="loading-spinner"></div>
       <div class="loading-text">Đang tải...</div>
     </div>
-    
+
     <div v-else-if="error" class="error">
       <div class="error-icon">⚠️</div>
       <div class="error-text">{{ error }}</div>
       <button @click="refreshWeather" class="refresh-button">Thử lại</button>
     </div>
-    
+
     <div v-else-if="weatherData" class="weather-content">
       <!-- Header with time and location -->
       <div class="weather-header">
@@ -152,8 +156,8 @@ onUnmounted(() => {
       <!-- Main weather display -->
       <div class="weather-main">
         <div class="weather-icon">
-          <img 
-            :src="`https://cdn.weatherbit.io/static/img/icons/${weatherData.icon}.png`" 
+          <img
+            :src="`https://cdn.weatherbit.io/static/img/icons/${weatherData.icon}.png`"
             :alt="weatherData.description"
             class="weather-icon-img"
           />
@@ -161,7 +165,9 @@ onUnmounted(() => {
         <div class="weather-info">
           <div class="temperature">{{ weatherData.temperature }}°</div>
           <div class="description">{{ weatherData.description }}</div>
-          <div class="feels-like">Cảm giác như {{ weatherData.feelsLike }}°</div>
+          <div class="feels-like">
+            Cảm giác như {{ weatherData.feelsLike }}°
+          </div>
         </div>
       </div>
 
@@ -174,7 +180,7 @@ onUnmounted(() => {
             <div class="detail-value">{{ weatherData.humidity }}%</div>
           </div>
         </div>
-        
+
         <div class="detail-item">
           <div class="detail-icon">💨</div>
           <div class="detail-text">
@@ -182,7 +188,7 @@ onUnmounted(() => {
             <div class="detail-value">{{ weatherData.windSpeed }} km/h</div>
           </div>
         </div>
-        
+
         <div class="detail-item">
           <div class="detail-icon">👁️</div>
           <div class="detail-text">
@@ -241,8 +247,12 @@ onUnmounted(() => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-text {
@@ -427,10 +437,14 @@ onUnmounted(() => {
 /* Hover effect */
 .weather-widget:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 10px 25px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .dark .weather-widget:hover {
-  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 10px 25px -3px rgba(0, 0, 0, 0.3),
+    0 4px 6px -2px rgba(0, 0, 0, 0.1);
 }
 </style>

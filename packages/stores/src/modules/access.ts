@@ -7,6 +7,8 @@ import { acceptHMRUpdate, defineStore } from 'pinia';
 type AccessToken = null | string;
 
 interface AccessState {
+  /** permission codes of current user */
+  accessCodes?: string[];
   accessMenus: MenuRecordRaw[];
   accessRoutes: RouteRecordRaw[];
   accessToken: AccessToken;
@@ -93,6 +95,7 @@ export const useAccessStore = defineStore('core-access', {
   state: (): AccessState => ({
     accessMenus: [],
     accessRoutes: [],
+    accessCodes: [],
     accessToken: null,
     isAccessChecked: false,
     isLockScreen: false,
