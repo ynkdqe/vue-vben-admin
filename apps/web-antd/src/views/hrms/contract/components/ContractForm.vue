@@ -3,65 +3,23 @@ import type { Dayjs } from 'dayjs';
 
 import { computed, reactive, ref, watch } from 'vue';
 
-import {
-  Button,
-  Collapse,
-  DatePicker,
-  Divider,
-  Form,
-  Input,
-  InputNumber,
-  Select,
-  Space,
-} from 'ant-design-vue';
+import { Button, DatePicker, Form, Select, Space } from 'ant-design-vue';
 import dayjs from 'dayjs';
 
 import { requestClient } from '#/api/request';
-import EmployeeSearchSelect from '#/components/EmployeeSearchSelect.vue';
+import {
+  calculateESocialInsuranceFee,
+  calculateEHealthInsuranceFee,
+  calculateEUnemployeeInsuranceFee,
+  calculateTaxFee,
+} from '#/utils/salary-utils';
+import ContractEmployeeInfo from './ContractEmployeeInfo.vue';
+import ContractSalaryInfo from './ContractSalaryInfo.vue';
+import ContractEmployeeCosts from './ContractEmployeeCosts.vue';
+import ContractEmployerCosts from './ContractEmployerCosts.vue';
+import ContractStatusApproval from './ContractStatusApproval.vue';
 
-type Id = number | string;
 
-interface ContractFormModel {
-  contractTypeId?: Id;
-  employeeId?: Id;
-
-  employeeName?: string;
-  employeeCode?: string;
-  email?: string;
-  phone?: string;
-  identification?: string;
-  birthDate?: string | undefined;
-  tax?: number | string | undefined;
-
-  effectiveDate?: Dayjs | undefined;
-  expiryDate?: Dayjs | undefined;
-  basicSalary?: number | undefined;
-  kpi?: number | undefined;
-  allowance?: number | undefined;
-  salaryGross?: number | undefined;
-  insuranceType?: Id | undefined;
-  insuranceValue?: number | undefined;
-  insuranceSalary?: number | undefined;
-
-  eSocialInsuranceFee?: number | undefined;
-  eHealthInsuranceFee?: number | undefined;
-  eUnemploymentInsuranceFee?: number | undefined;
-  eUnionFee?: number | undefined;
-  eTaxFee?: number | undefined;
-
-  salaryNet?: number | undefined;
-
-  cSocialInsuranceFee?: number | undefined;
-  cCalculateOccAccInsuranceFee?: number | undefined;
-  cHealthInsuranceFee?: number | undefined;
-  cUnemploymentInsuranceFee?: number | undefined;
-  totalCost?: number | undefined;
-
-  status?: Id | undefined;
-  checkers?: Id[];
-  approver?: Id | undefined;
-  notes?: string;
-}
 
 const props = defineProps<{
   contractTypeOptions?: Array<{ label: string; value: Id }>;
@@ -78,17 +36,10 @@ const emit = defineEmits<{
 
 const AForm = Form;
 const AFormItem = Form.Item;
-const AInput = Input;
-const AInputTextArea = Input.TextArea;
-const AInputGroup = Input.Group;
-const AInputNumber = InputNumber;
 const ASelect = Select;
 const ASelectOption = Select.Option;
 const ADatePicker = DatePicker;
-const ADivider = Divider;
 const ASpace = Space;
-const ACollapse = Collapse;
-const ACollapsePanel = Collapse.Panel;
 const AButton = Button;
 
 const form = reactive<ContractFormModel>({
@@ -174,6 +125,32 @@ watch(
   },
 );
 
+// Compute insuranceSalary based on insuranceType
+watch(
+  () => [form.insuranceType, form.insuranceValue, form.salaryGross],
+  () => {
+    try {
+      const type = Number(form.insuranceType);
+      const value = Number(form.insuranceValue ?? 0);
+      const gross = Number(form.salaryGross ?? 0);
+
+      if (type === 1) {
+        // Fixed amount
+        form.insuranceSalary = Number((value || 0).toFixed(2));
+      } else if (type === 2) {
+        // Percent of gross
+        const calc = gross * (value / 100);
+        form.insuranceSalary = Number(calc.toFixed(2));
+      } else {
+        form.insuranceSalary = undefined;
+      }
+    } catch (e) {
+      form.insuranceSalary = undefined;
+    }
+  },
+  { immediate: true },
+);
+
 watch(
   () => [
     form.cCalculateOccAccInsuranceFee,
@@ -200,6 +177,48 @@ const feesTotal = computed(() => {
     (form.eTaxFee || 0)
   );
 });
+
+// salaryConfig is loaded from API; declare before watches that reference it to avoid TDZ errors
+const salaryConfig = ref<any>(null);
+
+// Compute employee-side fees when relevant inputs or salaryConfig change
+// Note: heuristic for isLaborContract: contractTypeId === 1 or 2 => treated as labor contract.
+// Adjust mapping if your backend uses different ids.
+watch(
+  () => [
+    form.insuranceType,
+    form.insuranceSalary,
+    form.salaryGross,
+    form.contractTypeId,
+    form.tax,
+    salaryConfig.value,
+  ],
+  () => {
+    const insSalary = Number(form.insuranceSalary ?? 0);
+    const type = Number(form.insuranceType ?? 0);
+    const gross = Number(form.salaryGross ?? 0);
+    const taxPercent = Number(form.tax ?? 0);
+
+    // Social
+    form.eSocialInsuranceFee = calculateESocialInsuranceFee(type, insSalary, salaryConfig.value);
+    // Health
+    form.eHealthInsuranceFee = calculateEHealthInsuranceFee(type, insSalary, salaryConfig.value);
+    // Unemployment
+    form.eUnemploymentInsuranceFee = calculateEUnemployeeInsuranceFee(type, insSalary, salaryConfig.value);
+    // Union fee (employee) — use e_UnionPercent from config if present
+    try {
+      const unionPct = Number(salaryConfig.value?.e_UnionPercent ?? 0);
+      form.eUnionFee = Number(((insSalary * (unionPct || 0)) || 0).toFixed(2));
+    } catch {
+      form.eUnionFee = undefined;
+    }
+
+    // Tax — determine if contract is labor type (heuristic)
+    const isLabor = Number(form.contractTypeId) === 1 || Number(form.contractTypeId) === 2;
+    form.eTaxFee = calculateTaxFee(isLabor, gross, taxPercent, salaryConfig.value);
+  },
+  { immediate: true },
+);
 
 function onEmployeeChange(v: Id | Id[] | undefined, option?: any) {
   const id = Array.isArray(v) ? v?.[0] : v;
@@ -261,8 +280,9 @@ function onSubmit() {
 
 const submitting = ref(false);
 
-const statusOptions = ref<Array<{ label: string; value: Id }>>([]);
+import type { Id, ContractFormModel } from '../models/contract-models';
 
+const statusOptions = ref<Array<{ label: string; value: Id }>>([]);
 async function loadContractTypes() {
   try {
     const res = await requestClient.get<any>('/api/hrms/contract/type', {
@@ -293,8 +313,20 @@ async function loadStatuses() {
   }
 }
 
+async function loadSalaryConfig() {
+  try {
+    const res = await requestClient.get<any>('/api/hrms/contract/salary-config', {
+      responseReturn: 'body',
+    });
+    salaryConfig.value = res?.data ?? null;
+  } catch (e) {
+    salaryConfig.value = null;
+  }
+}
+
 loadContractTypes();
 loadStatuses();
+loadSalaryConfig();
 
 function numberFormatter(v: any) {
   if (v === null || v === undefined) return '';
@@ -342,279 +374,16 @@ function numberParser(v: any) {
       </AFormItem>
     </div>
 
-    <ADivider orientation="left">Thông tin nhân viên</ADivider>
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-      <AFormItem label="Nhân viên" name="employeeId">
-        <EmployeeSearchSelect
-          mode="single"
-          :model-value="form.employeeId as any"
-          placeholder="Chọn nhân viên"
-          @change="onEmployeeChange"
-          @update:model-value="(v: any) => (form.employeeId = v as any)"
-        />
-      </AFormItem>
-
-      <AFormItem label="Số điện thoại">
-        <AInput :value="form.phone" readonly />
-      </AFormItem>
-      <AFormItem label="Email">
-        <AInput :value="form.email" readonly />
-      </AFormItem>
-      <AFormItem label="CMND/CCCD">
-        <AInput :value="form.identification" readonly />
-      </AFormItem>
-      <AFormItem label="Ngày sinh">
-        <AInput
-          :value="
-            form.birthDate ? dayjs(form.birthDate).format('DD-MM-YYYY') : ''
-          "
-          readonly
-        />
-      </AFormItem>
-      <AFormItem label="Mã số thuế">
-        <AInput v-model:value="form.tax as any" />
-      </AFormItem>
-    </div>
+    <ContractEmployeeInfo :form="form" @change="onEmployeeChange" @update:model-value="(v) => (form.employeeId = v)" />
 
     <!-- Lương -->
-    <ADivider orientation="left">Thông tin Lương</ADivider>
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-      <AFormItem label="Lương cơ bản">
-        <AInputNumber
-          v-model:value="form.basicSalary"
-          :min="0"
-          class="w-full"
-          :formatter="numberFormatter"
-          :parser="numberParser"
-        />
-      </AFormItem>
-      <AFormItem label="KPI & Phụ cấp">
-        <AInputGroup compact>
-          <AInputNumber
-            v-model:value="form.allowance"
-            :min="0"
-            class="w-1/2"
-            placeholder="KPI"
-            :formatter="numberFormatter"
-            :parser="numberParser"
-          />
-          <AInputNumber
-            v-model:value="form.kpi"
-            :min="0"
-            class="w-1/2"
-            placeholder="Phụ cấp"
-            :formatter="numberFormatter"
-            :parser="numberParser"
-          />
-        </AInputGroup>
-      </AFormItem>
-      <AFormItem label="Lương gross">
-        <AInputNumber
-          v-model:value="form.salaryGross"
-          :min="0"
-          class="w-full"
-          :formatter="numberFormatter"
-          :parser="numberParser"
-        />
-      </AFormItem>
-      <!-- <AFormItem label="Lương net">
-        <AInputNumber
-          v-model:value="form.salaryNet"
-          :min="0"
-          style="width: 100%"
-          :formatter="numberFormatter"
-          :parser="numberParser"
-        />
-      </AFormItem> -->
-    </div>
+  <ContractSalaryInfo :form="form" :numberFormatter="numberFormatter" :numberParser="numberParser" />
 
-    <!-- Chi phí NLĐ -->
-    <ADivider orientation="left">Chi phí NLĐ</ADivider>
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-      <AFormItem label="Bảo hiểm">
-        <AInputGroup class="-mx-1 flex flex-wrap" compact>
-          <div class="w-full px-1 md:w-2/5">
-            <div class="mb-1 text-xs text-gray-500">Loại</div>
-            <ASelect v-model:value="form.insuranceType" class="w-full">
-              <ASelectOption
-                v-for="o in insuranceTypes"
-                :key="o.value"
-                :value="o.value"
-              >
-                {{ o.label }}
-              </ASelectOption>
-            </ASelect>
-          </div>
-          <div class="w-full px-1 md:w-3/5">
-            <div class="mb-1 text-xs text-gray-500">Giá trị</div>
-            <AInputNumber
-              v-model:value="form.insuranceValue"
-              :min="0"
-              class="w-full"
-              placeholder="Giá trị BH"
-              :formatter="numberFormatter"
-              :parser="numberParser"
-            />
-          </div>
-        </AInputGroup>
-        <div class="mt-1 text-sm text-gray-500">
-          Lương đóng bảo hiểm (insuranceSalary) sẽ được dùng để tính các khoản
-          bắt buộc.
-          <span v-if="form.insuranceSalary !== undefined">
-            Hiện: {{ numberFormatter(form.insuranceSalary) }}
-          </span>
-        </div>
-      </AFormItem>
+    <ContractEmployeeCosts :form="form" :insuranceTypes="insuranceTypes" :numberFormatter="numberFormatter" :numberParser="numberParser" :feesTotal="feesTotal" />
 
-      <AFormItem label="Các khoản phải nộp" class="md:col-span-2">
-        <ACollapse :bordered="false">
-          <ACollapsePanel
-            :header="`Các khoản phải nộp — Tổng: ${numberFormatter(feesTotal)}`"
-            key="fees"
-          >
-            <AInputGroup class="-mx-1 flex flex-wrap" compact>
-              <div class="w-full px-1 md:w-1/5">
-                <div class="mb-1 text-xs text-gray-500">Xã hội</div>
-                <AInputNumber
-                  v-model:value="form.eSocialInsuranceFee"
-                  :min="0"
-                  class="w-full"
-                  placeholder="Xã hội"
-                  :formatter="numberFormatter"
-                  :parser="numberParser"
-                />
-              </div>
-              <div class="w-full px-1 md:w-1/5">
-                <div class="mb-1 text-xs text-gray-500">Y tế</div>
-                <AInputNumber
-                  v-model:value="form.eHealthInsuranceFee"
-                  :min="0"
-                  class="w-full"
-                  placeholder="Y tế"
-                  :formatter="numberFormatter"
-                  :parser="numberParser"
-                />
-              </div>
-              <div class="w-full px-1 md:w-1/5">
-                <div class="mb-1 text-xs text-gray-500">Thất nghiệp</div>
-                <AInputNumber
-                  v-model:value="form.eUnemploymentInsuranceFee"
-                  :min="0"
-                  class="w-full"
-                  placeholder="Thất nghiệp"
-                  :formatter="numberFormatter"
-                  :parser="numberParser"
-                />
-              </div>
-              <div class="w-full px-1 md:w-1/5">
-                <div class="mb-1 text-xs text-gray-500">Công đoàn</div>
-                <AInputNumber
-                  v-model:value="form.eUnionFee"
-                  :min="0"
-                  class="w-full"
-                  :formatter="numberFormatter"
-                  :parser="numberParser"
-                />
-              </div>
-              <div class="w-full px-1 md:w-1/5">
-                <div class="mb-1 text-xs text-gray-500">Thuế TNCN</div>
-                <AInputNumber
-                  v-model:value="form.eTaxFee"
-                  :min="0"
-                  class="w-full"
-                  :formatter="numberFormatter"
-                  :parser="numberParser"
-                />
-              </div>
-            </AInputGroup>
-          </ACollapsePanel>
-        </ACollapse>
-      </AFormItem>
-    </div>
+    <ContractEmployerCosts :form="form" :numberFormatter="numberFormatter" :numberParser="numberParser" />
 
-    <!-- Chi phí doanh nghiệp -->
-    <ADivider orientation="left">Chi phí doanh nghiệp</ADivider>
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-      <AFormItem label="BHXH">
-        <AInputNumber
-          v-model:value="form.cSocialInsuranceFee"
-          :min="0"
-          style="width: 100%"
-          :formatter="numberFormatter"
-          :parser="numberParser"
-        />
-      </AFormItem>
-      <AFormItem label="TNLĐ-BNN">
-        <AInputNumber
-          v-model:value="form.cCalculateOccAccInsuranceFee"
-          :min="0"
-          style="width: 100%"
-          :formatter="numberFormatter"
-          :parser="numberParser"
-        />
-      </AFormItem>
-      <AFormItem label="BHYT">
-        <AInputNumber
-          v-model:value="form.cHealthInsuranceFee"
-          :min="0"
-          style="width: 100%"
-          :formatter="numberFormatter"
-          :parser="numberParser"
-        />
-      </AFormItem>
-      <AFormItem label="BHTN">
-        <AInputNumber
-          v-model:value="form.cUnemploymentInsuranceFee"
-          :min="0"
-          style="width: 100%"
-          :formatter="numberFormatter"
-          :parser="numberParser"
-        />
-      </AFormItem>
-      <AFormItem label="Tổng chi phí">
-        <AInputNumber
-          v-model:value="form.totalCost"
-          :min="0"
-          style="width: 100%"
-          :formatter="numberFormatter"
-          :parser="numberParser"
-        />
-      </AFormItem>
-    </div>
-
-    <ADivider orientation="left">Trạng thái & Phê duyệt</ADivider>
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-      <AFormItem label="Trạng thái">
-        <ASelect v-model:value="form.status" style="width: 100%">
-          <ASelectOption
-            v-for="s in statusOptions"
-            :key="s.value"
-            :value="s.value"
-          >
-            {{ s.label }}
-          </ASelectOption>
-        </ASelect>
-      </AFormItem>
-      <AFormItem label="Người kiểm tra (Checkers)">
-        <EmployeeSearchSelect
-          mode="multiple"
-          :model-value="form.checkers as any"
-          placeholder="Chọn người kiểm tra"
-          @update:model-value="(v: any) => (form.checkers = v)"
-        />
-      </AFormItem>
-      <AFormItem label="Người duyệt (Approver)">
-        <EmployeeSearchSelect
-          mode="single"
-          :model-value="form.approver as any"
-          placeholder="Chọn người duyệt"
-          @update:model-value="(v: any) => (form.approver = v)"
-        />
-      </AFormItem>
-      <AFormItem class="md:col-span-3" label="Ghi chú">
-        <AInputTextArea v-model:value="form.notes" :rows="3" />
-      </AFormItem>
-    </div>
+    <ContractStatusApproval :form="form" :statusOptions="statusOptions" />
 
     <ASpace class="mt-4" align="center">
       <AButton @click="onCancel">Hủy</AButton>

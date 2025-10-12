@@ -5,6 +5,7 @@ import type { Dayjs } from 'dayjs';
 import type { ContractDto } from '#/api/hrms/contract';
 
 import { onMounted, reactive, ref } from 'vue';
+import dayjs from 'dayjs';
 
 import {
   Button,
@@ -19,6 +20,7 @@ import {
 } from 'ant-design-vue';
 
 import { createContract, fetchContractList } from '#/api/hrms/contract';
+import { requestClient } from '#/api/request';
 
 import ContractForm from './components/ContractForm.vue';
 
@@ -53,6 +55,8 @@ const loading = ref(false);
 const dataSource = ref<ContractDto[]>([]);
 const total = ref(0);
 const showCreate = ref(false);
+const statusOptions = ref<Array<{ label: string; value: number | string }>>([]);
+const statusMap = ref<Record<string, string>>({});
 
 async function loadData() {
   loading.value = true;
@@ -71,6 +75,19 @@ async function loadData() {
     total.value = res.total;
   } finally {
     loading.value = false;
+  }
+}
+
+async function loadStatuses() {
+  try {
+    const res = await requestClient.get<any>('/api/hrms/contract/status', { responseReturn: 'body' });
+    const list = Array.isArray(res?.data) ? res.data : res?.items || res?.data || [];
+    statusOptions.value = list.map((x: any) => ({ label: x?.name, value: x?.id }));
+    statusMap.value = {};
+    for (const s of statusOptions.value) statusMap.value[String(s.value)] = s.label;
+  } catch {
+    statusOptions.value = [];
+    statusMap.value = {};
   }
 }
 
@@ -118,6 +135,13 @@ async function onCreateSubmit(payload: Record<string, any>) {
 }
 
 onMounted(loadData);
+onMounted(loadStatuses);
+
+function numberFormatter(v: number | string) {
+  if (v === null || v === undefined) return '';
+  const s = String(v);
+  return s.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
 
 const columns = [
   {
@@ -127,49 +151,44 @@ const columns = [
     width: 140,
   },
   {
-    title: 'Nhân viên',
-    dataIndex: 'employeeId',
-    key: 'employeeId',
-    width: 120,
-  },
-  {
-    title: 'Loại HĐ',
-    dataIndex: 'contractTypeId',
-    key: 'contractTypeId',
-    width: 100,
-  },
-  {
     title: 'Hiệu lực',
     dataIndex: 'effectiveDate',
     key: 'effectiveDate',
     width: 150,
+    // render date as DD-MM-YYYY
+    customRender: ({ text }: { text: string }) => (text ? dayjs(text).format('DD-MM-YYYY') : ''),
   },
   {
     title: 'Hết hạn',
     dataIndex: 'expiryDate',
     key: 'expiryDate',
     width: 150,
+    customRender: ({ text }: { text: string }) => (text ? dayjs(text).format('DD-MM-YYYY') : ''),
   },
   {
     title: 'Lương cơ bản',
     dataIndex: 'basicSalary',
     key: 'basicSalary',
     width: 140,
+    customRender: ({ text }: { text: number }) => (text !== undefined && text !== null ? numberFormatter(text) : ''),
   },
   {
     title: 'Tổng lương',
     dataIndex: 'totalSalary',
     key: 'totalSalary',
     width: 140,
+    customRender: ({ text }: { text: number }) => (text !== undefined && text !== null ? numberFormatter(text) : ''),
   },
   {
     title: 'Trạng thái',
     dataIndex: 'status',
     key: 'status',
     width: 120,
+    customRender: ({ text }: { text: number | string }) => statusMap.value[String(text)] || String(text || ''),
   },
 ];
 </script>
+
 
 <template>
   <div class="p-4">
