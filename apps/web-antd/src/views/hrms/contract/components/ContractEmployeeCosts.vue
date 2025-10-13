@@ -1,6 +1,22 @@
 <script setup lang="ts">
-import { Form, Select, InputNumber, Collapse, Divider, Input } from 'ant-design-vue';
+import type { ContractFormModel } from '../models/contract-models';
 
+import {
+  Collapse,
+  Divider,
+  Form,
+  Input,
+  InputNumber,
+  Select,
+} from 'ant-design-vue';
+
+const props = defineProps<{
+  feesTotal: number;
+  form: Partial<ContractFormModel> & Record<string, any>;
+  insuranceTypes: Array<{ label: string; value: any }>;
+  numberFormatter: (v: any) => string;
+  numberParser: (v: any) => any;
+}>();
 const AFormItem = Form.Item;
 const ASelect = Select;
 const ASelectOption = Select.Option;
@@ -9,15 +25,6 @@ const AInputGroup = Input.Group;
 const ACollapse = Collapse;
 const ACollapsePanel = Collapse.Panel;
 const ADivider = Divider;
-
-import type { ContractFormModel } from '../models/contract-models';
-const props = defineProps<{
-  form: Partial<ContractFormModel> & Record<string, any>;
-  insuranceTypes: Array<{ label: string; value: any }>;
-  numberFormatter: (v: any) => string;
-  numberParser: (v: any) => any;
-  feesTotal: number;
-}>();
 </script>
 
 <template>
@@ -50,8 +57,15 @@ const props = defineProps<{
             />
           </div>
         </AInputGroup>
-        <div class="mt-1 text-sm text-gray-500" v-if="props.form.insuranceSalary !== undefined">
-          Mức lương đóng bảo hiểm là <span style="font-weight: 700;">{{ props.numberFormatter(props.form.insuranceSalary) }}</span> đ
+        <div
+          class="mt-1 text-sm text-gray-500"
+          v-if="props.form.insuranceSalary !== undefined"
+        >
+          Mức lương đóng bảo hiểm là
+          <span style="font-weight: 700">{{
+            props.numberFormatter(props.form.insuranceSalary)
+          }}</span>
+          đ
         </div>
       </AFormItem>
 
@@ -124,5 +138,7 @@ const props = defineProps<{
 </template>
 
 <style scoped>
-.grid { width: 100%; }
+.grid {
+  width: 100%;
+}
 </style>

@@ -2,10 +2,11 @@
 import type { TablePaginationConfig } from 'ant-design-vue';
 import type { Dayjs } from 'dayjs';
 
+import type { ContractFormModel } from './components/models/contract-models';
+
 import type { ContractDto } from '#/api/hrms/contract';
 
-import { onMounted, reactive, ref } from 'vue';
-import dayjs from 'dayjs';
+import { h, onMounted, onUnmounted, reactive, ref } from 'vue';
 
 import {
   Button,
@@ -14,31 +15,40 @@ import {
   Form,
   Input,
   message,
+  Popconfirm,
   Select,
   Space,
   Table,
+  Tag,
 } from 'ant-design-vue';
+import dayjs from 'dayjs';
 
 import { createContract, fetchContractList } from '#/api/hrms/contract';
 import { requestClient } from '#/api/request';
+import ContractTypeSelect from '#/components/ContractTypeSelect.vue';
+import StatusSelect from '#/components/StatusSelect.vue';
 
 import ContractForm from './components/ContractForm.vue';
 
 const AForm = Form;
 const AFormItem = Form.Item;
 const AInput = Input;
-const ASelect = Select;
-const ASelectOption = Select.Option;
+// ASelect / ASelectOption not used here (StatusSelect component used)
 const ARangePicker = DatePicker.RangePicker;
+const ASelect = Select;
 const ATable = Table;
 const ASpace = Space;
 const AButton = Button;
 const ADrawer = Drawer;
+const ATag = Tag;
+const APopconfirm = Popconfirm;
 
 interface QueryState {
   keyword?: string;
-  status?: number | string;
-  range?: [Dayjs, Dayjs] | undefined;
+  status?: string;
+  isActive?: number;
+  contractType?: string;
+  effective?: [Dayjs, Dayjs] | undefined;
   current: number;
   pageSize: number;
 }
@@ -46,7 +56,8 @@ interface QueryState {
 const query = reactive<QueryState>({
   keyword: '',
   status: undefined,
-  range: undefined,
+  contractType: undefined,
+  effective: undefined,
   current: 1,
   pageSize: 10,
 });
@@ -55,21 +66,31 @@ const loading = ref(false);
 const dataSource = ref<ContractDto[]>([]);
 const total = ref(0);
 const showCreate = ref(false);
+const isMobile = ref(false);
+const drawerWidth = ref<number | string>(1000);
+const drawerPlacement = ref<'bottom' | 'right'>('right');
+const drawerHeight = ref<number | string | undefined>(undefined);
 const statusOptions = ref<Array<{ label: string; value: number | string }>>([]);
 const statusMap = ref<Record<string, string>>({});
+const contractTypes = ref<Array<{ label: string; value: number | string }>>([]);
 
 async function loadData() {
   loading.value = true;
   try {
-    const start = query.range?.[0];
-    const end = query.range?.[1];
+    const effectiveStart = query.effective?.[0].toString();
+    const effectiveEnd = query.effective?.[1].toString();
+
     const res = await fetchContractList({
       keyword: query.keyword,
-      status: query.status,
+      status: Array.isArray(query.status)
+        ? query.status.join(',')
+        : query.status,
+      contractType: query.contractType,
+      isActive: query.isActive,
       current: query.current,
       pageSize: query.pageSize,
-      effectiveStart: start ? start.toISOString() : undefined,
-      effectiveEnd: end ? end.toISOString() : undefined,
+      effectiveStart: effectiveStart || undefined,
+      effectiveEnd: effectiveEnd || undefined,
     });
     dataSource.value = res.items;
     total.value = res.total;
@@ -80,21 +101,48 @@ async function loadData() {
 
 async function loadStatuses() {
   try {
-    const res = await requestClient.get<any>('/api/hrms/contract/status', { responseReturn: 'body' });
-    const list = Array.isArray(res?.data) ? res.data : res?.items || res?.data || [];
-    statusOptions.value = list.map((x: any) => ({ label: x?.name, value: x?.id }));
+    const res = await requestClient.get<any>('/api/hrms/contract/status', {
+      responseReturn: 'body',
+    });
+    const list = Array.isArray(res?.data)
+      ? res.data
+      : res?.items || res?.data || [];
+    statusOptions.value = list.map((x: any) => ({
+      label: x?.name,
+      value: x?.id,
+    }));
     statusMap.value = {};
-    for (const s of statusOptions.value) statusMap.value[String(s.value)] = s.label;
+    for (const s of statusOptions.value)
+      statusMap.value[String(s.value)] = s.label;
   } catch {
     statusOptions.value = [];
     statusMap.value = {};
   }
 }
 
+async function loadContractTypes() {
+  try {
+    const res = await requestClient.get<any>('/api/hrms/contract/type', {
+      responseReturn: 'body',
+    });
+    const list = Array.isArray(res?.data)
+      ? res.data
+      : res?.items || res?.data || [];
+    contractTypes.value = list.map((x: any) => ({
+      label: x?.name,
+      value: x?.id,
+    }));
+  } catch {
+    contractTypes.value = [];
+  }
+}
+
 function onReset() {
   query.keyword = '';
   query.status = undefined;
-  query.range = undefined;
+  query.effective = undefined;
+  query.contractType = undefined;
+  query.isActive = undefined;
   query.current = 1;
   loadData();
 }
@@ -111,6 +159,7 @@ function onFilter() {
 }
 
 function onCreateContract() {
+  editModel.value = null;
   showCreate.value = true;
 }
 
@@ -136,14 +185,45 @@ async function onCreateSubmit(payload: Record<string, any>) {
 
 onMounted(loadData);
 onMounted(loadStatuses);
+onMounted(loadContractTypes);
+
+function updateDrawerResponsive() {
+  const w = window.innerWidth;
+  isMobile.value = w <= 640;
+  if (isMobile.value) {
+    drawerWidth.value = '100%';
+    drawerPlacement.value = 'bottom';
+    drawerHeight.value = '100%';
+  } else {
+    drawerWidth.value = 1000;
+    drawerPlacement.value = 'right';
+    drawerHeight.value = undefined;
+  }
+}
+
+onMounted(() => {
+  updateDrawerResponsive();
+  window.addEventListener('resize', updateDrawerResponsive);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateDrawerResponsive);
+});
 
 function numberFormatter(v: number | string) {
   if (v === null || v === undefined) return '';
   const s = String(v);
-  return s.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return s.replaceAll(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
 const columns = [
+  {
+    title: '#',
+    dataIndex: 'id',
+    key: 'id',
+    width: 70,
+    customRender: ({ text }: { text: number | string }) => String(text ?? ''),
+  },
   {
     title: 'Mã HĐ',
     dataIndex: 'contractCode',
@@ -151,44 +231,141 @@ const columns = [
     width: 140,
   },
   {
+    title: 'Tên HĐ',
+    dataIndex: 'contractName',
+    key: 'contractName',
+    width: 200,
+    customRender: ({ record }: { record: any }) =>
+      String(record?.contractName ?? record?.name ?? ''),
+  },
+  {
+    title: 'Tên nhân viên',
+    dataIndex: ['employee', 'name'],
+    key: 'employeeName',
+    width: 180,
+    customRender: ({ record }: { record: any }) =>
+      String(record?.employee?.name ?? record?.employeeName ?? ''),
+  },
+  {
+    title: 'Mã nhân viên',
+    dataIndex: ['employee', 'employeeCode'],
+    key: 'employeeCode',
+    width: 140,
+    customRender: ({ record }: { record: any }) =>
+      String(
+        record?.employee?.employeeCode ?? record?.employee?.userName ?? '',
+      ),
+  },
+  {
     title: 'Hiệu lực',
     dataIndex: 'effectiveDate',
     key: 'effectiveDate',
-    width: 150,
+    width: 120,
     // render date as DD-MM-YYYY
-    customRender: ({ text }: { text: string }) => (text ? dayjs(text).format('DD-MM-YYYY') : ''),
+    customRender: ({ text }: { text: string }) =>
+      text ? dayjs(text).format('DD-MM-YYYY') : '',
   },
   {
     title: 'Hết hạn',
     dataIndex: 'expiryDate',
     key: 'expiryDate',
-    width: 150,
-    customRender: ({ text }: { text: string }) => (text ? dayjs(text).format('DD-MM-YYYY') : ''),
+    width: 120,
+    customRender: ({ text }: { text: string }) =>
+      text ? dayjs(text).format('DD-MM-YYYY') : '',
   },
   {
-    title: 'Lương cơ bản',
-    dataIndex: 'basicSalary',
-    key: 'basicSalary',
+    title: 'Lương gross',
+    dataIndex: 'salaryGross',
+    key: 'salaryGross',
     width: 140,
-    customRender: ({ text }: { text: number }) => (text !== undefined && text !== null ? numberFormatter(text) : ''),
-  },
-  {
-    title: 'Tổng lương',
-    dataIndex: 'totalSalary',
-    key: 'totalSalary',
-    width: 140,
-    customRender: ({ text }: { text: number }) => (text !== undefined && text !== null ? numberFormatter(text) : ''),
+    customRender: ({ record }: { record: any }) => {
+      const val = record?.salaryGross ?? record?.totalSalary ?? '';
+      return val !== undefined && val !== null ? numberFormatter(val) : '';
+    },
   },
   {
     title: 'Trạng thái',
     dataIndex: 'status',
     key: 'status',
     width: 120,
-    customRender: ({ text }: { text: number | string }) => statusMap.value[String(text)] || String(text || ''),
+    customRender: ({ text }: { text: number | string }) =>
+      h(
+        ATag,
+        { color: getStatusColor(Number(text)) },
+        { default: () => statusMap.value[String(text)] || String(text || '') },
+      ),
+  },
+  {
+    title: 'Hành động',
+    key: 'actions',
+    width: 140,
+    customRender: ({ record }: { record: any }) =>
+      h(ASpace, null, {
+        default: () => [
+          h(
+            AButton,
+            {
+              type: 'link',
+              onClick: () => onEdit(record),
+            },
+            { default: () => 'Sửa' },
+          ),
+          h(
+            APopconfirm,
+            {
+              title: 'Bạn có chắc muốn xóa hợp đồng này không?',
+              onConfirm: () => onDelete(record?.id),
+              okText: 'Xóa',
+              cancelText: 'Hủy',
+            },
+            {
+              default: () =>
+                h(
+                  AButton,
+                  { type: 'link', danger: true },
+                  { default: () => 'Xóa' },
+                ),
+            },
+          ),
+        ],
+      }),
   },
 ];
-</script>
 
+function getStatusColor(s: number | string) {
+  try {
+    const n = Number(s);
+    if (n === 1) return 'green';
+    if (n === 0) return 'red';
+    return 'default';
+  } catch {
+    return 'default';
+  }
+}
+
+const editModel = ref<null | Partial<ContractFormModel>>(null);
+
+function onEdit(record: any) {
+  editModel.value = { ...record };
+  showCreate.value = true;
+}
+
+async function onDelete(id: number | string | undefined) {
+  if (!id) return;
+  try {
+    loading.value = true;
+    await requestClient.delete(`/api/hrms/contract/${id}`, {
+      responseReturn: 'body',
+    });
+    message.success('Xóa hợp đồng thành công');
+    await loadData();
+  } catch {
+    message.error('Xóa hợp đồng thất bại');
+  } finally {
+    loading.value = false;
+  }
+}
+</script>
 
 <template>
   <div class="p-4">
@@ -203,18 +380,38 @@ const columns = [
           />
         </AFormItem>
         <AFormItem label="Trạng thái">
-          <ASelect
-            v-model:value="query.status"
-            allow-clear
+          <StatusSelect
+            :statuses="statusOptions"
+            :multiple="true"
+            v-model="query.status"
             placeholder="Chọn trạng thái"
-            style="width: 180px"
-          >
-            <ASelectOption :value="1">Hiệu lực</ASelectOption>
-            <ASelectOption :value="0">Hết hạn</ASelectOption>
-          </ASelect>
+            style="width: 220px"
+          />
+        </AFormItem>
+        <AFormItem label="Loại HĐ">
+          <ContractTypeSelect
+            :types="contractTypes"
+            v-model="query.contractType"
+            placeholder="Chọn loại hợp đồng"
+            style="width: 220px"
+          />
         </AFormItem>
         <AFormItem label="Hiệu lực">
-          <ARangePicker v-model:value="query.range" format="YYYY-MM-DD" />
+          <div class="flex items-center gap-2">
+            <ARangePicker
+              v-model:value="query.effective"
+              format="DD-MM-YYYY"
+              value-format="YYYY-MM-DD"
+            />
+            <ASelect
+              v-model:value="query.isActive"
+              placeholder="Hiệu lực"
+              style="width: 140px"
+            >
+              <ASelect.Option :value="1">Hiệu lực</ASelect.Option>
+              <ASelect.Option :value="0">Hết hạn</ASelect.Option>
+            </ASelect>
+          </div>
         </AFormItem>
         <ASpace>
           <AButton type="primary" @click="onFilter">Lọc</AButton>
@@ -240,18 +437,27 @@ const columns = [
 
     <ADrawer
       v-model:open="showCreate"
-      :width="1000"
+      :width="drawerWidth"
+      :height="drawerHeight"
+      :placement="drawerPlacement"
       title="Tạo hợp đồng"
       destroy-on-close
-      placement="right"
-      :body-style="{ padding: '12px' }"
+      get-container="body"
+      wrap-class-name="hrms-contract-drawer"
+      :mask-closable="true"
+      :closable="true"
+      :body-style="{ padding: '12px', overflow: 'auto', height: '100%' }"
     >
       <div class="drawer-responsive-wrapper">
-        <ContractForm
-          :loading="loading"
-          @cancel="onCreateCancel"
-          @submit="onCreateSubmit"
-        />
+        <div class="drawer-body">
+          <ContractForm
+            :loading="loading"
+            v-model="editModel"
+            :key="String(editModel?.id || 'new')"
+            @cancel="onCreateCancel"
+            @submit="onCreateSubmit"
+          />
+        </div>
       </div>
     </ADrawer>
   </div>
@@ -270,5 +476,35 @@ const columns = [
     right: 0 !important;
     z-index: 9999 !important;
   }
+  .hrms-contract-drawer .ant-drawer-mask {
+    z-index: 9998 !important;
+  }
+}
+
+/* drawer body helper: make the form scroll and keep action buttons visible */
+.drawer-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 60vh;
+}
+.drawer-body > form {
+  flex: 1 1 auto;
+}
+.ant-drawer-footer {
+  position: sticky;
+  bottom: 0;
+  background: white;
+  padding: 12px;
+  z-index: 9999;
+}
+
+/* make action bar inside ContractForm sticky */
+.hrms-contract-drawer .form-actions {
+  position: sticky;
+  bottom: 0;
+  background: white;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  z-index: 10000;
 }
 </style>

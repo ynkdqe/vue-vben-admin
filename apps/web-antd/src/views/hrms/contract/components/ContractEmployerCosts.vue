@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { Form, InputNumber } from 'ant-design-vue';
-
-const AFormItem = Form.Item;
-const AInputNumber = InputNumber;
-
 import type { ContractFormModel } from '../models/contract-models';
+
+import { Divider, Form, InputNumber } from 'ant-design-vue';
+
 const props = defineProps<{
   form: Partial<ContractFormModel> & Record<string, any>;
   numberFormatter: (v: any) => string;
   numberParser: (v: any) => any;
 }>();
+const AFormItem = Form.Item;
+const AInputNumber = InputNumber;
+const ADivider = Divider;
 </script>
 
 <template>
@@ -66,5 +67,7 @@ const props = defineProps<{
 </template>
 
 <style scoped>
-.grid { width: 100%; }
+.grid {
+  width: 100%;
+}
 </style>

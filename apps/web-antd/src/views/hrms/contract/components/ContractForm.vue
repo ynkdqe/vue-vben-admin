@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { Dayjs } from 'dayjs';
 
+import type { ContractFormModel, Id } from '../models/contract-models';
+
 import { computed, reactive, ref, watch } from 'vue';
 
 import { Button, DatePicker, Form, Select, Space } from 'ant-design-vue';
@@ -8,18 +10,17 @@ import dayjs from 'dayjs';
 
 import { requestClient } from '#/api/request';
 import {
-  calculateESocialInsuranceFee,
   calculateEHealthInsuranceFee,
+  calculateESocialInsuranceFee,
   calculateEUnemployeeInsuranceFee,
   calculateTaxFee,
 } from '#/utils/salary-utils';
-import ContractEmployeeInfo from './ContractEmployeeInfo.vue';
-import ContractSalaryInfo from './ContractSalaryInfo.vue';
+
 import ContractEmployeeCosts from './ContractEmployeeCosts.vue';
+import ContractEmployeeInfo from './ContractEmployeeInfo.vue';
 import ContractEmployerCosts from './ContractEmployerCosts.vue';
+import ContractSalaryInfo from './ContractSalaryInfo.vue';
 import ContractStatusApproval from './ContractStatusApproval.vue';
-
-
 
 const props = defineProps<{
   contractTypeOptions?: Array<{ label: string; value: Id }>;
@@ -144,7 +145,7 @@ watch(
       } else {
         form.insuranceSalary = undefined;
       }
-    } catch (e) {
+    } catch {
       form.insuranceSalary = undefined;
     }
   },
@@ -200,22 +201,40 @@ watch(
     const taxPercent = Number(form.tax ?? 0);
 
     // Social
-    form.eSocialInsuranceFee = calculateESocialInsuranceFee(type, insSalary, salaryConfig.value);
+    form.eSocialInsuranceFee = calculateESocialInsuranceFee(
+      type,
+      insSalary,
+      salaryConfig.value,
+    );
     // Health
-    form.eHealthInsuranceFee = calculateEHealthInsuranceFee(type, insSalary, salaryConfig.value);
+    form.eHealthInsuranceFee = calculateEHealthInsuranceFee(
+      type,
+      insSalary,
+      salaryConfig.value,
+    );
     // Unemployment
-    form.eUnemploymentInsuranceFee = calculateEUnemployeeInsuranceFee(type, insSalary, salaryConfig.value);
+    form.eUnemploymentInsuranceFee = calculateEUnemployeeInsuranceFee(
+      type,
+      insSalary,
+      salaryConfig.value,
+    );
     // Union fee (employee) — use e_UnionPercent from config if present
     try {
       const unionPct = Number(salaryConfig.value?.e_UnionPercent ?? 0);
-      form.eUnionFee = Number(((insSalary * (unionPct || 0)) || 0).toFixed(2));
+      form.eUnionFee = Number((insSalary * (unionPct || 0) || 0).toFixed(2));
     } catch {
       form.eUnionFee = undefined;
     }
 
     // Tax — determine if contract is labor type (heuristic)
-    const isLabor = Number(form.contractTypeId) === 1 || Number(form.contractTypeId) === 2;
-    form.eTaxFee = calculateTaxFee(isLabor, gross, taxPercent, salaryConfig.value);
+    const isLabor =
+      Number(form.contractTypeId) === 1 || Number(form.contractTypeId) === 2;
+    form.eTaxFee = calculateTaxFee(
+      isLabor,
+      gross,
+      taxPercent,
+      salaryConfig.value,
+    );
   },
   { immediate: true },
 );
@@ -280,8 +299,6 @@ function onSubmit() {
 
 const submitting = ref(false);
 
-import type { Id, ContractFormModel } from '../models/contract-models';
-
 const statusOptions = ref<Array<{ label: string; value: Id }>>([]);
 async function loadContractTypes() {
   try {
@@ -315,11 +332,14 @@ async function loadStatuses() {
 
 async function loadSalaryConfig() {
   try {
-    const res = await requestClient.get<any>('/api/hrms/contract/salary-config', {
-      responseReturn: 'body',
-    });
+    const res = await requestClient.get<any>(
+      '/api/hrms/contract/salary-config',
+      {
+        responseReturn: 'body',
+      },
+    );
     salaryConfig.value = res?.data ?? null;
-  } catch (e) {
+  } catch {
     salaryConfig.value = null;
   }
 }
@@ -362,6 +382,7 @@ function numberParser(v: any) {
           v-model:value="form.effectiveDate"
           format="DD-MM-YYYY"
           class="w-full"
+          placeholder="DD-MM-YYYY"
         />
       </AFormItem>
 
@@ -370,22 +391,41 @@ function numberParser(v: any) {
           v-model:value="form.expiryDate"
           format="DD-MM-YYYY"
           class="w-full"
+          placeholder="DD-MM-YYYY"
         />
       </AFormItem>
     </div>
 
-    <ContractEmployeeInfo :form="form" @change="onEmployeeChange" @update:model-value="(v) => (form.employeeId = v)" />
+    <ContractEmployeeInfo
+      :form="form"
+      @change="onEmployeeChange"
+      @update:model-value="(v) => (form.employeeId = v)"
+    />
 
     <!-- Lương -->
-  <ContractSalaryInfo :form="form" :numberFormatter="numberFormatter" :numberParser="numberParser" />
+    <ContractSalaryInfo
+      :form="form"
+      :number-formatter="numberFormatter"
+      :number-parser="numberParser"
+    />
 
-    <ContractEmployeeCosts :form="form" :insuranceTypes="insuranceTypes" :numberFormatter="numberFormatter" :numberParser="numberParser" :feesTotal="feesTotal" />
+    <ContractEmployeeCosts
+      :form="form"
+      :insurance-types="insuranceTypes"
+      :number-formatter="numberFormatter"
+      :number-parser="numberParser"
+      :fees-total="feesTotal"
+    />
 
-    <ContractEmployerCosts :form="form" :numberFormatter="numberFormatter" :numberParser="numberParser" />
+    <ContractEmployerCosts
+      :form="form"
+      :number-formatter="numberFormatter"
+      :number-parser="numberParser"
+    />
 
-    <ContractStatusApproval :form="form" :statusOptions="statusOptions" />
+    <ContractStatusApproval :form="form" :status-options="statusOptions" />
 
-    <ASpace class="mt-4" align="center">
+    <ASpace class="form-actions mt-4" align="center">
       <AButton @click="onCancel">Hủy</AButton>
       <AButton
         type="primary"

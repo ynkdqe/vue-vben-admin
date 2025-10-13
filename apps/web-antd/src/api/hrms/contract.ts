@@ -22,10 +22,12 @@ export interface ContractDto {
 
 export interface ContractQuery {
   keyword?: string;
-  status?: number | string;
+  status?: string;
+  isActive?: number | string;
   current?: number;
   page?: number;
   pageSize?: number;
+  contractType?: string; // ISO
   effectiveStart?: string; // ISO
   effectiveEnd?: string; // ISO
 }
@@ -63,6 +65,8 @@ export async function fetchContractList(params: ContractQuery = {}) {
     pageSize,
     keyword,
     status,
+    isActive,
+    contractType,
     effectiveStart,
     effectiveEnd,
   } = params;
@@ -71,6 +75,8 @@ export async function fetchContractList(params: ContractQuery = {}) {
     pageSize,
     keyword,
     status,
+    isActive,
+    contractType,
     effectiveStart,
     effectiveEnd,
   };
