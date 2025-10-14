@@ -3,16 +3,16 @@ import type { Dayjs } from 'dayjs';
 export type Id = number | string;
 
 export interface ContractFormModel {
-  contractTypeId: Id;
-  contractDurationId: Id;
-  employeeId: Id;
+  contractTypeId: number | undefined;
+  contractName: string | undefined;
+  employeeId: number | undefined;
   employeeName?: string;
   employeeCode?: string;
   email?: string;
   phone?: string;
   identification?: string;
   birthDate?: string | undefined;
-  tax?: number | string | undefined;
+  tax?: number | undefined;
 
   effectiveDate?: Dayjs | undefined;
   expiryDate?: Dayjs | undefined;
@@ -24,18 +24,18 @@ export interface ContractFormModel {
   insuranceValue?: number | undefined;
   insuranceSalary?: number | undefined;
 
-  eSocialInsuranceFee?: number | undefined;
-  eHealthInsuranceFee?: number | undefined;
-  eUnemploymentInsuranceFee?: number | undefined;
-  eUnionFee?: number | undefined;
-  eTaxFee?: number | undefined;
+  employeeSocialInsuranceFee?: number | undefined;
+  employeeHealthInsuranceFee?: number | undefined;
+  employeeUnemploymentInsuranceFee?: number | undefined;
+  employeeUnionFee?: number | undefined;
+  taxFee?: number | undefined;
 
   salaryNet?: number | undefined;
 
-  cSocialInsuranceFee?: number | undefined;
-  cCalculateOccAccInsuranceFee?: number | undefined;
-  cHealthInsuranceFee?: number | undefined;
-  cUnemploymentInsuranceFee?: number | undefined;
+  businessSocialInsuranceFee?: number | undefined;
+  businessCalculateOccAccInsuranceFee?: number | undefined;
+  businessHealthInsuranceFee?: number | undefined;
+  businessUnemploymentInsuranceFee?: number | undefined;
   totalCost?: number | undefined;
 
   status?: Id | undefined;

@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import dayjs from 'dayjs';
-import { Form, Input, Divider } from 'ant-design-vue';
+import { Form, InputNumber, Divider, Input } from 'ant-design-vue';
 
 import EmployeeSearchSelect from '#/components/EmployeeSearchSelect.vue';
 
 const AFormItem = Form.Item;
 const AInput = Input;
+const AInputNumber = InputNumber;
 const ADivider = Divider;
 
 import type { ContractFormModel } from '../models/contract-models';
@@ -49,7 +50,7 @@ const emit = defineEmits<{
         />
       </AFormItem>
       <AFormItem label="Mã số thuế">
-        <AInput v-model:value="props.form.tax" />
+        <AInputNumber v-model:value="props.form.tax" class="w-full" :min="0" />
       </AFormItem>
     </div>
   </div>

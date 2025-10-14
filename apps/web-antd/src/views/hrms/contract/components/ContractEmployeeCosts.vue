@@ -122,7 +122,7 @@ const ADivider = Divider;
               <div class="w-full px-1 md:w-1/5">
                 <div class="mb-1 text-xs text-gray-500">Thuế TNCN</div>
                 <AInputNumber
-                  v-model:value="props.form.eTaxFee"
+                  v-model:value="props.form.taxFee"
                   :min="0"
                   class="w-full"
                   :formatter="props.numberFormatter"
