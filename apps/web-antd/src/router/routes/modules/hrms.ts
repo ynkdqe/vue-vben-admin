@@ -57,15 +57,6 @@ const routes: RouteRecordRaw[] = [
           title: $t('page.hrms.contracttype'),
         },
       },
-      {
-        name: 'HrmsContractDuration',
-        path: '/hrms/contract-duration',
-        component: () => import('#/views/hrms/contract-duration/index.vue'),
-        meta: {
-          icon: 'mdi:file-document-edit-outline',
-          title: $t('page.hrms.contractduration'),
-        },
-      },
     ],
   },
 ];

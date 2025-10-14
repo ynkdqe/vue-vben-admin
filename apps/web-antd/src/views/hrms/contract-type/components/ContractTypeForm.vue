@@ -25,6 +25,8 @@ const ADivider = Divider;
 const model = reactive({
   name: '',
   code: '',
+  contractDurations: [] as Array<{ id?: number | null; name: string; duration: number }>,
+  extraProperties: {} as Record<string, any>,
   hasSocialInsurance: true,
   isTaxFixed: false,
   taxPercent: 0,
@@ -40,7 +42,24 @@ const model = reactive({
   minInsuranceSalary: 0,
 });
 
+function addDuration() {
+  model.contractDurations.push({ id: null, name: '', duration: 1 });
+}
+
+function removeDuration(index: number) {
+  model.contractDurations.splice(index, 1);
+}
+
 function onSubmit() {
+  // Ensure extraProperties.durations is populated from contractDurations
+  try {
+    const durs = Array.isArray(model.contractDurations)
+      ? model.contractDurations.map((d) => ({ name: d.name, duration: Number(d.duration) }))
+      : [];
+    model.extraProperties = { ...(model.extraProperties || {}), durations: durs };
+  } catch (e) {
+    // ignore mapping errors
+  }
   emit('submit', { ...model });
 }
 function onCancel() {
@@ -181,6 +200,18 @@ function numberParser(v: any) {
         />
       </AFormItem>
     </div>
+
+    <ADivider orientation="left">Thời hạn</ADivider>
+    <AFormItem>
+      <div class="grid grid-cols-1 gap-3 md:grid-cols-1">
+        <div v-for="(d, idx) in model.contractDurations" :key="idx" class="flex gap-2 items-center">
+          <AInput v-model:value="d.name" placeholder="Tên duration" class="flex-[3]" />
+          <AInputNumber v-model:value="d.duration" :min="1" style="width:80px" />
+          <AButton type="link" danger @click="() => removeDuration(idx)">Xóa</AButton>
+        </div>
+        <AButton type="dashed" @click="addDuration">Thêm thời hạn</AButton>
+      </div>
+    </AFormItem>
 
     <div class="form-actions mt-3 flex justify-end gap-2">
       <AButton @click="onCancel">Hủy</AButton>

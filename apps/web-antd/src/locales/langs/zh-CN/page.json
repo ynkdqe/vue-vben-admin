@@ -20,8 +20,7 @@
     "attendance": "考勤",
     "overtime": "加班",
     "leave": "请假",
-    "contracttype": "合同类型",
-    "contractduration": "合同期限"
+    "contracttype": "合同类型"
   },
   "sms": {
     "title": "SMS",

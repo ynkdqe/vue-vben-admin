@@ -377,21 +377,6 @@ function numberParser(v: any) {
         </ASelect>
       </AFormItem>
 
-      <!-- <AFormItem label="Thời hạn hợp đồng" name="contractDuration">
-        <ASelect
-          v-model:value="form.contractDuration"
-          placeholder="Chọn thời hạn hợp đồng"
-        >
-          <ASelectOption
-            v-for="o in contractDurations"
-            :key="o.value"
-            :value="o.value"
-          >
-            {{ o.label }}
-          </ASelectOption>
-        </ASelect>
-      </AFormItem> -->
-
       <AFormItem label="Hiệu lực">
         <ADatePicker
           v-model:value="form.effectiveDate"

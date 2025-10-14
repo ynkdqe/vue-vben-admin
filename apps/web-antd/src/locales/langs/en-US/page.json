@@ -20,8 +20,7 @@
     "attendance": "Attendance",
     "overtime": "Overtime",
     "leave": "Leave",
-    "contracttype": "Contract Type",
-    "contractduration": "Contract Duration"
+    "contracttype": "Contract Type"
   },
   "sms": {
     "title": "Sms",

@@ -14,6 +14,7 @@ import {
   Table,
   Tag,
 } from 'ant-design-vue';
+import { Modal, InputNumber, Input } from 'ant-design-vue';
 
 import {
   createContractType,
@@ -22,6 +23,7 @@ import {
 import { requestClient } from '#/api/request';
 
 import ContractTypeForm from './components/ContractTypeForm.vue';
+import DurationsModal from './components/DurationsModal.vue';
 
 const AButton = Button;
 const ADrawer = Drawer;
@@ -29,6 +31,9 @@ const ATable = Table;
 const ASpace = Space;
 const APopconfirm = Popconfirm;
 const ATag = Tag;
+const AModal = Modal;
+const AInputNumber = InputNumber;
+const AInput = Input;
 
 const query = reactive({ current: 1, pageSize: 10, keyword: '' });
 const loading = ref(false);
@@ -47,50 +52,6 @@ async function loadData() {
     });
     dataSource.value = res.items;
     total.value = res.total;
-  } finally {
-    loading.value = false;
-  }
-}
-
-function onTableChange(pagination: TablePaginationConfig) {
-  query.current = Number(pagination.current || 1);
-  query.pageSize = Number(pagination.pageSize || 10);
-  loadData();
-}
-
-function onCreateOpen() {
-  editModel.value = null;
-  showCreate.value = true;
-}
-function onCancel() {
-  showCreate.value = false;
-}
-
-async function onSubmit(payload: Record<string, any>) {
-  loading.value = true;
-  try {
-    await createContractType(payload);
-    message.success('Tạo loại hợp đồng thành công');
-    showCreate.value = false;
-    await loadData();
-  } catch {
-    message.error('Tạo loại hợp đồng thất bại');
-  } finally {
-    loading.value = false;
-  }
-}
-
-async function onDelete(id: number | string | undefined) {
-  if (!id) return;
-  loading.value = true;
-  try {
-    await requestClient.delete(`/api/hrms/contract-type/${id}`, {
-      responseReturn: 'body',
-    });
-    message.success('Xóa loại hợp đồng thành công');
-    await loadData();
-  } catch {
-    message.error('Xóa loại hợp đồng thất bại');
   } finally {
     loading.value = false;
   }
@@ -175,6 +136,14 @@ const columns = [
             { default: () => 'Sửa' },
           ),
           h(
+            AButton,
+            {
+              type: 'link',
+              onClick: () => openDurationsModal(record),
+            },
+            { default: () => 'Thời hạn' },
+          ),
+          h(
             APopconfirm,
             {
               title: 'Bạn có chắc muốn xóa loại hợp đồng này không?',
@@ -195,6 +164,20 @@ const columns = [
       }),
   },
 ];
+
+// Durations modal state (handled by DurationsModal component)
+const durationsModalVisible = ref(false);
+const selectedRecord = ref<any>(null);
+
+function openDurationsModal(record: any) {
+  selectedRecord.value = record;
+  durationsModalVisible.value = true;
+}
+
+async function onDurationsSaved() {
+  durationsModalVisible.value = false;
+  await loadData();
+}
 
 onMounted(loadData);
 </script>
@@ -235,6 +218,7 @@ onMounted(loadData);
     >
       <ContractTypeForm @cancel="onCancel" @submit="onSubmit" />
     </ADrawer>
+    <DurationsModal :open="durationsModalVisible" :record="selectedRecord" @update:open="(v) => (durationsModalVisible = v)" @saved="onDurationsSaved" />
   </div>
 </template>
 
