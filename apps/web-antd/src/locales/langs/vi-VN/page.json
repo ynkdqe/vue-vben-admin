@@ -16,7 +16,12 @@
     "employee": "Nhân viên",
     "contract": "Hợp đồng",
     "workshift": "Ca làm việc",
-    "spreadsheet": "Bảng tính"
+    "spreadsheet": "Bảng tính",
+    "attendance": "Chấm công",
+    "overtime": "Làm thêm giờ",
+    "leave": "Nghỉ phép",
+    "contracttype": "Loại hợp đồng",
+    "contractduration": "Thời hạn hợp đồng"
   },
   "sms": {
     "title": "Sms",

@@ -16,7 +16,12 @@
     "employee": "Employee",
     "contract": "Contract",
     "workshift": "Workshift",
-    "spreadsheet": "Spreadsheet"
+    "spreadsheet": "Spreadsheet",
+    "attendance": "Attendance",
+    "overtime": "Overtime",
+    "leave": "Leave",
+    "contracttype": "Contract Type",
+    "contractduration": "Contract Duration"
   },
   "sms": {
     "title": "Sms",
@@ -26,6 +31,7 @@
     "notification": {
       "title": "Notification",
       "administration": "Notification (Administration)",
-      "personal": "Notification (Personal)"}
+      "personal": "Notification (Personal)"
+    }
   }
 }

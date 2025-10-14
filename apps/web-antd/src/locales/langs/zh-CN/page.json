@@ -16,7 +16,12 @@
     "employee": "员工",
     "contract": "合同",
     "workshift": "工作班次",
-    "spreadsheet": "电子表格"
+    "spreadsheet": "电子表格",
+    "attendance": "考勤",
+    "overtime": "加班",
+    "leave": "请假",
+    "contracttype": "合同类型",
+    "contractduration": "合同期限"
   },
   "sms": {
     "title": "SMS",
