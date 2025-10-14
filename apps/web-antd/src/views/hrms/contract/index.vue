@@ -284,6 +284,16 @@ const columns = [
     },
   },
   {
+    title: 'Chi phí hợp đồng',
+    dataIndex: 'totalCost',
+    key: 'totalCost',
+    width: 140,
+    customRender: ({ record }: { record: any }) => {
+      const val = record?.totalCost ?? '';
+      return val !== undefined && val !== null ? numberFormatter(val) : '';
+    },
+  },
+  {
     title: 'Trạng thái',
     dataIndex: 'status',
     key: 'status',

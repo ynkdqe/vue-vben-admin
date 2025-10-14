@@ -3,9 +3,9 @@ import type { Dayjs } from 'dayjs';
 export type Id = number | string;
 
 export interface ContractFormModel {
-  contractTypeId?: Id;
-  employeeId?: Id;
-
+  contractTypeId: Id;
+  contractDurationId: Id;
+  employeeId: Id;
   employeeName?: string;
   employeeCode?: string;
   email?: string;

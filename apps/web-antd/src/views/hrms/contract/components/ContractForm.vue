@@ -302,7 +302,7 @@ const submitting = ref(false);
 const statusOptions = ref<Array<{ label: string; value: Id }>>([]);
 async function loadContractTypes() {
   try {
-    const res = await requestClient.get<any>('/api/hrms/contract/type', {
+    const res = await requestClient.get<any>('/api/hrms/contract-type', {
       responseReturn: 'body',
     });
     const list = Array.isArray(res?.data) ? res.data : res?.items || [];
@@ -361,10 +361,10 @@ function numberParser(v: any) {
 <template>
   <AForm layout="vertical" class="p-2">
     <!-- Loại hợp đồng & Nhân viên -->
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-      <AFormItem label="Loại hợp đồng" name="contractTypeId">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+      <AFormItem label="Loại hợp đồng" name="contractType">
         <ASelect
-          v-model:value="form.contractTypeId"
+          v-model:value="form.contractType"
           placeholder="Chọn loại hợp đồng"
         >
           <ASelectOption
@@ -376,6 +376,21 @@ function numberParser(v: any) {
           </ASelectOption>
         </ASelect>
       </AFormItem>
+
+      <!-- <AFormItem label="Thời hạn hợp đồng" name="contractDuration">
+        <ASelect
+          v-model:value="form.contractDuration"
+          placeholder="Chọn thời hạn hợp đồng"
+        >
+          <ASelectOption
+            v-for="o in contractDurations"
+            :key="o.value"
+            :value="o.value"
+          >
+            {{ o.label }}
+          </ASelectOption>
+        </ASelect>
+      </AFormItem> -->
 
       <AFormItem label="Hiệu lực">
         <ADatePicker
