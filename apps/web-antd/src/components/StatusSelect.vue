@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineEmits, defineProps } from 'vue';
+import { defineProps } from 'vue';
 
 import { Select } from 'ant-design-vue';
 
