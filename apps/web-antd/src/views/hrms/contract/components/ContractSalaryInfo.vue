@@ -2,6 +2,7 @@
 import type { ContractFormModel } from '../models/contract-models';
 
 import { Divider, Form, Input, InputNumber } from 'ant-design-vue';
+import { useI18n } from '@vben/locales';
 
 const props = defineProps<{
   form: Partial<ContractFormModel> & Record<string, any>;
@@ -16,6 +17,8 @@ const AInputNumber = InputNumber;
 const AInputGroup = Input.Group;
 const ADivider = Divider;
 
+const { t } = useI18n();
+
 function updateField(field: string, value: any) {
   const copy = { ...props.form } as Record<string, any>;
   copy[field] = value;
@@ -25,9 +28,9 @@ function updateField(field: string, value: any) {
 
 <template>
   <div>
-    <ADivider orientation="left">Thông tin Lương</ADivider>
+    <ADivider orientation="left">{{ t('page.contract.form.salaryInfo.title', 'Thông tin Lương') }}</ADivider>
     <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-      <AFormItem label="Lương cơ bản">
+      <AFormItem :label="t('page.contract.form.basicSalary')">
         <AInputNumber
           :value="props.form.basicSalary"
           @change="(v) => updateField('basicSalary', v)"
@@ -37,14 +40,14 @@ function updateField(field: string, value: any) {
           :parser="props.numberParser"
         />
       </AFormItem>
-      <AFormItem label="KPI & Phụ cấp">
+      <AFormItem :label="t('page.contract.form.kpi') + ' & ' + t('page.contract.form.allowance')">
         <AInputGroup compact>
           <AInputNumber
             :value="props.form.allowance"
             @change="(v) => updateField('allowance', v)"
             :min="0"
             class="w-1/2"
-            placeholder="KPI"
+            :placeholder="t('page.contract.form.kpi')"
             :formatter="props.numberFormatter"
             :parser="props.numberParser"
           />
@@ -53,13 +56,13 @@ function updateField(field: string, value: any) {
             @change="(v) => updateField('kpi', v)"
             :min="0"
             class="w-1/2"
-            placeholder="Phụ cấp"
+            :placeholder="t('page.contract.form.allowance')"
             :formatter="props.numberFormatter"
             :parser="props.numberParser"
           />
         </AInputGroup>
       </AFormItem>
-      <AFormItem label="Lương gross">
+      <AFormItem :label="t('page.contract.form.salaryGross')">
         <AInputNumber
           :value="props.form.salaryGross"
           disabled

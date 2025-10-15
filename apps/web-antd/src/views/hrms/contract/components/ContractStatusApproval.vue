@@ -2,6 +2,7 @@
 import type { ContractFormModel } from '../models/contract-models';
 
 import { Divider, Form, Input, Select } from 'ant-design-vue';
+import { useI18n } from '@vben/locales';
 
 import EmployeeSearchSelect from '#/components/EmployeeSearchSelect.vue';
 
@@ -17,6 +18,7 @@ const ASelect = Select;
 const ASelectOption = Select.Option;
 const AInputTextArea = Input.TextArea;
 const ADivider = Divider;
+const { t } = useI18n();
 function updateField(field: string, value: any) {
   const copy = { ...props.form } as Record<string, any>;
   copy[field] = value;
@@ -26,9 +28,9 @@ function updateField(field: string, value: any) {
 
 <template>
   <div>
-    <ADivider orientation="left">Trạng thái & Phê duyệt</ADivider>
+    <ADivider orientation="left">{{ t('page.contract.form.statusApproval.title') }}</ADivider>
     <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-      <AFormItem label="Trạng thái">
+      <AFormItem :label="t('page.contract.form.status')">
         <ASelect
           :value="props.form.status"
           @change="(v) => updateField('status', v)"
@@ -43,23 +45,23 @@ function updateField(field: string, value: any) {
           </ASelectOption>
         </ASelect>
       </AFormItem>
-      <AFormItem label="Người kiểm tra (Checkers)">
+      <AFormItem :label="t('page.contract.form.checkers') + ' (Checkers)'">
         <EmployeeSearchSelect
           mode="multiple"
           :model-value="props.form.checkers as any"
-          placeholder="Chọn người kiểm tra"
+          :placeholder="t('page.contract.form.checkersPlaceholder')"
           @update:model-value="(v: any) => updateField('checkers', v)"
         />
       </AFormItem>
-      <AFormItem label="Người duyệt (Approver)">
+      <AFormItem :label="t('page.contract.form.approver') + ' (Approver)'">
         <EmployeeSearchSelect
           mode="single"
           :model-value="props.form.approver as any"
-          placeholder="Chọn người duyệt"
+          :placeholder="t('page.contract.form.approverPlaceholder')"
           @update:model-value="(v: any) => updateField('approver', v)"
         />
       </AFormItem>
-      <AFormItem class="md:col-span-3" label="Ghi chú">
+      <AFormItem class="md:col-span-3" :label="t('page.contract.form.notes')">
         <AInputTextArea
           :value="props.form.notes"
           @change="(v) => updateField('notes', v)"

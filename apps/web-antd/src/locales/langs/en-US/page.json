@@ -22,6 +22,99 @@
     "leave": "Leave",
     "contracttype": "Contract Type"
   },
+  "contract": {
+    "index": {
+      "title": "Contract List",
+      "create": "Create Contract",
+      "search": "Search",
+      "searchPlaceholder": "Code/employee...",
+      "statusPlaceholder": "Select status",
+      "contractTypePlaceholder": "Select contract type",
+      "effectivePlaceholder": "Effective",
+      "effective": "Effective",
+      "expired": "Expired",
+      "filter": "Filter",
+      "reset": "Reset",
+      "createSuccess": "Created contract successfully",
+      "createError": "Create contract failed",
+      "total": "Total",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteConfirm": "Are you sure you want to delete this contract?",
+      "columns": {
+        "contractCode": "Contract Code",
+        "contractName": "Contract Name",
+        "employee": "Employee",
+        "contractType": "Contract Type",
+        "employeeCode": "Employee Code",
+        "status": "Status",
+        "effectiveDate": "Effective",
+        "expiryDate": "Expiry",
+        "salaryGross": "Salary Gross",
+        "salaryInfo": {
+          "title": "Salary Information"
+        },
+        "statusApproval": {
+          "title": "Status & Approval"
+        },
+        "totalCost": "Employer Cost",
+        "actions": "Actions"
+      }
+    },
+    "form": {
+      "contractType": "Contract Type",
+      "contractTypePlaceholder": "Select contract type",
+      "duration": "Duration",
+      "employeeInfo": {
+        "title": "Employee Information",
+        "employee": "Employee",
+        "selectEmployee": "Select employee",
+        "phone": "Phone",
+        "email": "Email",
+        "identification": "ID/Passport",
+        "birthDate": "Birth Date",
+        "taxCode": "Tax Code"
+      },
+      "effectiveDate": "Effective Date",
+      "expiryDate": "Expiry Date",
+      "basicSalary": "Basic Salary",
+      "kpi": "KPI",
+      "allowance": "Allowance",
+      "salaryGross": "Salary Gross",
+      "salaryInfo": {
+        "title": "Salary Information"
+      },
+      "status": "Status",
+      "checkers": "Checkers",
+      "checkersPlaceholder": "Select checkers",
+      "approver": "Approver",
+      "approverPlaceholder": "Select approver",
+      "notes": "Notes",
+      "employeeCosts": {
+        "title": "Employee Costs",
+        "feesHeader": "Fees — Total: {total}",
+        "employeeSocial": "Social",
+        "employeeHealth": "Health",
+        "employeeUnemployment": "Unemployment",
+        "employeeUnion": "Union",
+        "taxFee": "Personal Income Tax"
+      },
+      "businessCosts": {
+        "title": "Employer Costs",
+        "businessSocial": "Social Insurance",
+        "businessOccAcc": "Occ/Acc",
+        "businessHealth": "Health Insurance",
+        "businessUnemployment": "Unemployment Insurance",
+        "totalCost": "Total Cost"
+      },
+      "insuranceType": "Insurance Type",
+      "insuranceValue": "Value",
+      "insuranceSalary": "Insurance Salary",
+      "salaryNet": "Net Salary",
+      "save": "Save",
+      "cancel": "Cancel"
+    }
+  },
   "sms": {
     "title": "Sms",
     "provider": "Provider",

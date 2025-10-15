@@ -2,6 +2,7 @@
 import type { ContractFormModel } from '../models/contract-models';
 
 import { Divider, Form, Input, InputNumber } from 'ant-design-vue';
+import { useI18n } from '@vben/locales';
 import dayjs from 'dayjs';
 
 import EmployeeSearchSelect from '#/components/EmployeeSearchSelect.vue';
@@ -18,6 +19,7 @@ const AFormItem = Form.Item;
 const AInput = Input;
 const AInputNumber = InputNumber;
 const ADivider = Divider;
+const { t } = useI18n();
 function updateField(field: string, value: any) {
   const copy = { ...props.form } as Record<string, any>;
   copy[field] = value;
@@ -27,28 +29,28 @@ function updateField(field: string, value: any) {
 
 <template>
   <div>
-    <ADivider orientation="left">Thông tin nhân viên</ADivider>
+    <ADivider orientation="left">{{ t('page.contract.form.employeeInfo.title') || 'Thông tin nhân viên' }}</ADivider>
     <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-      <AFormItem label="Nhân viên" name="employeeId">
+      <AFormItem :label="t('page.contract.form.employeeInfo.employee') || 'Nhân viên'" name="employeeId">
         <EmployeeSearchSelect
           mode="single"
           :model-value="props.form.employeeId as any"
-          placeholder="Chọn nhân viên"
+          :placeholder="t('page.contract.form.employeeInfo.selectEmployee') || 'Chọn nhân viên'"
           @change="(v, opt) => emit('change', v, opt)"
           @update:model-value="(v: any) => emit('update:model-value', v)"
         />
       </AFormItem>
 
-      <AFormItem label="Số điện thoại">
+      <AFormItem :label="t('page.contract.form.employeeInfo.phone') || 'Số điện thoại'">
         <AInput :value="props.form.phone" readonly />
       </AFormItem>
-      <AFormItem label="Email">
+      <AFormItem :label="t('page.contract.form.employeeInfo.email') || 'Email'">
         <AInput :value="props.form.email" readonly />
       </AFormItem>
-      <AFormItem label="CMND/CCCD">
+      <AFormItem :label="t('page.contract.form.employeeInfo.identification') || 'CMND/CCCD'">
         <AInput :value="props.form.identification" readonly />
       </AFormItem>
-      <AFormItem label="Ngày sinh">
+      <AFormItem :label="t('page.contract.form.employeeInfo.birthDate') || 'Ngày sinh'">
         <AInput
           :value="
             props.form.birthDate
@@ -58,7 +60,7 @@ function updateField(field: string, value: any) {
           readonly
         />
       </AFormItem>
-      <AFormItem label="Mã số thuế">
+      <AFormItem :label="t('page.contract.form.employeeInfo.taxCode') || 'Mã số thuế'">
         <AInputNumber
           :value="props.form.tax"
           @change="(v) => updateField('tax', v)"

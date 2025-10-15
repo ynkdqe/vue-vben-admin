@@ -2,6 +2,7 @@
 import type { ContractFormModel } from '../models/contract-models';
 
 import { Divider, Form, InputNumber } from 'ant-design-vue';
+import { useI18n } from '@vben/locales';
 
 const props = defineProps<{
   form: Partial<ContractFormModel> & Record<string, any>;
@@ -11,7 +12,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:form', v: Partial<ContractFormModel> & Record<string, any>): void;
 }>();
-
+const { t } = useI18n();
 function updateField(field: string, value: any) {
   const copy = { ...props.form } as Record<string, any>;
   copy[field] = value;
@@ -25,9 +26,9 @@ const ADivider = Divider;
 
 <template>
   <div>
-    <ADivider orientation="left">Chi phí doanh nghiệp</ADivider>
+    <ADivider orientation="left">{{ t('page.contract.form.businessCosts.title') }}</ADivider>
     <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-      <AFormItem label="BHXH">
+      <AFormItem :label="t('page.contract.form.businessCosts.businessSocial')">
         <AInputNumber
           :value="props.form.businessSocialInsuranceFee"
           @change="(v) => updateField('businessSocialInsuranceFee', v)"
@@ -37,7 +38,7 @@ const ADivider = Divider;
           :parser="props.numberParser"
         />
       </AFormItem>
-      <AFormItem label="TNLĐ-BNN">
+      <AFormItem :label="t('page.contract.form.businessCosts.businessOccAcc')">
         <AInputNumber
           :value="props.form.businessCalculateOccAccInsuranceFee"
           @change="(v) => updateField('businessCalculateOccAccInsuranceFee', v)"
@@ -47,7 +48,7 @@ const ADivider = Divider;
           :parser="props.numberParser"
         />
       </AFormItem>
-      <AFormItem label="BHYT">
+      <AFormItem :label="t('page.contract.form.businessCosts.businessHealth')">
         <AInputNumber
           :value="props.form.businessHealthInsuranceFee"
           @change="(v) => updateField('businessHealthInsuranceFee', v)"
@@ -57,7 +58,7 @@ const ADivider = Divider;
           :parser="props.numberParser"
         />
       </AFormItem>
-      <AFormItem label="BHTN">
+      <AFormItem :label="t('page.contract.form.businessCosts.businessUnemployment')">
         <AInputNumber
           :value="props.form.businessUnemploymentInsuranceFee"
           @change="(v) => updateField('businessUnemploymentInsuranceFee', v)"
@@ -67,7 +68,7 @@ const ADivider = Divider;
           :parser="props.numberParser"
         />
       </AFormItem>
-      <AFormItem label="Tổng chi phí">
+      <AFormItem :label="t('page.contract.form.businessCosts.totalCost')">
         <AInputNumber
           :value="props.form.totalCost"
           @change="(v) => updateField('totalCost', v)"

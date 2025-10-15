@@ -26,6 +26,7 @@ import ContractEmployeeCosts from './ContractEmployeeCosts.vue';
 import ContractEmployeeInfo from './ContractEmployeeInfo.vue';
 import ContractSalaryInfo from './ContractSalaryInfo.vue';
 import ContractStatusApproval from './ContractStatusApproval.vue';
+import { useI18n } from '@vben/locales';
 
 const props = defineProps<{
   contractTypeOptions?: Array<{ label: string; value: Id }>;
@@ -39,6 +40,8 @@ const emit = defineEmits<{
   (e: 'submit', v: Record<string, any>): void;
   (e: 'cancel'): void;
 }>();
+
+const { t } = useI18n();
 
 const AForm = Form;
 const AFormItem = Form.Item;
@@ -559,10 +562,10 @@ watch(
   <AForm layout="vertical" class="p-2">
     <!-- Loại hợp đồng & Nhân viên -->
     <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
-      <AFormItem label="Loại hợp đồng" name="contractType">
+          <AFormItem :label="t('page.contract.form.contractType') || 'Loại hợp đồng'" name="contractType">
         <ASelect
           v-model:value="form.contractTypeId"
-          placeholder="Chọn loại hợp đồng"
+              :placeholder="t('page.contract.form.contractTypePlaceholder') || 'Chọn loại hợp đồng'"
           class="flex-1"
         >
           <ASelectOption
@@ -575,10 +578,10 @@ watch(
         </ASelect>
       </AFormItem>
 
-      <AFormItem label="Thời hạn hợp đồng" name="contractName">
+          <AFormItem :label="t('page.contract.form.duration') || 'Thời hạn'" name="contractName">
         <ASelect
           v-model:value="selectedDurationValue"
-          placeholder="Thời hạn"
+              :placeholder="t('page.contract.form.duration') || 'Thời hạn'"
           class="flex-1"
         >
           <ASelectOption
@@ -591,7 +594,7 @@ watch(
         </ASelect>
       </AFormItem>
 
-      <AFormItem label="Hiệu lực">
+          <AFormItem :label="t('page.contract.form.effectiveDate') || 'Hiệu lực'">
         <ADatePicker
           v-model:value="form.effectiveDate"
           format="DD-MM-YYYY"
@@ -601,7 +604,7 @@ watch(
         />
       </AFormItem>
 
-      <AFormItem label="Hết hạn">
+          <AFormItem :label="t('page.contract.form.expiryDate') || 'Hết hạn'">
         <ADatePicker
           v-model:value="form.expiryDate"
           format="DD-MM-YYYY"
@@ -651,13 +654,13 @@ watch(
     />
 
     <ASpace class="form-actions mt-4" align="center">
-      <AButton @click="onCancel">Hủy</AButton>
+          <AButton @click="onCancel">{{ t('page.contract.form.cancel') || 'Cancel' }}</AButton>
       <AButton
         type="primary"
         :loading="submitting || !!props.loading"
         @click="onSubmit"
       >
-        Lưu
+            {{ t('page.contract.form.save') || 'Save' }}
       </AButton>
     </ASpace>
   </AForm>

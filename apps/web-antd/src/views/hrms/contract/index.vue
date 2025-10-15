@@ -8,6 +8,7 @@ import type { ContractDto } from '#/api/hrms/contract';
 
 import { h, onMounted, onUnmounted, reactive, ref } from 'vue';
 
+
 import {
   Button,
   DatePicker,
@@ -29,6 +30,7 @@ import ContractTypeSelect from '#/components/ContractTypeSelect.vue';
 import StatusSelect from '#/components/StatusSelect.vue';
 
 import ContractForm from './components/ContractForm.vue';
+import { useI18n } from '@vben/locales';
 
 const AForm = Form;
 const AFormItem = Form.Item;
@@ -159,7 +161,7 @@ function onFilter() {
 }
 
 function onCreateContract() {
-  editModel.value = null;
+  editModel.value = undefined;
   showCreate.value = true;
 }
 
@@ -168,16 +170,16 @@ function onCreateCancel() {
 }
 
 async function onCreateSubmit(payload: Record<string, any>) {
-  loading.value = true;
+    loading.value = true;
   try {
     await createContract(payload);
-    message.success('Tạo hợp đồng thành công');
+    message.success(t('page.contract.index.createSuccess') || 'Tạo hợp đồng thành công');
     showCreate.value = false;
     query.current = 1;
     await loadData();
   } catch {
     // message displayed by request interceptor; optionally add fallback
-    message.error('Tạo hợp đồng thất bại');
+    message.error(t('page.contract.index.createError') || 'Tạo hợp đồng thất bại');
   } finally {
     loading.value = false;
   }
@@ -186,6 +188,8 @@ async function onCreateSubmit(payload: Record<string, any>) {
 onMounted(loadData);
 onMounted(loadStatuses);
 onMounted(loadContractTypes);
+
+const { t } = useI18n();
 
 function updateDrawerResponsive() {
   const w = window.innerWidth;
@@ -225,13 +229,13 @@ const columns = [
     customRender: ({ text }: { text: number | string }) => String(text ?? ''),
   },
   {
-    title: 'Mã HĐ',
+    title: t('page.contract.index.columns.contractCode') || 'Mã HĐ',
     dataIndex: 'contractCode',
     key: 'contractCode',
     width: 140,
   },
   {
-    title: 'Tên HĐ',
+    title: t('page.contract.index.columns.contractName') || 'Tên HĐ',
     dataIndex: 'contractName',
     key: 'contractName',
     width: 200,
@@ -239,7 +243,7 @@ const columns = [
       String(record?.contractName ?? record?.name ?? ''),
   },
   {
-    title: 'Tên nhân viên',
+    title: t('page.contract.index.columns.employee') || 'Tên nhân viên',
     dataIndex: ['employee', 'name'],
     key: 'employeeName',
     width: 180,
@@ -247,7 +251,7 @@ const columns = [
       String(record?.employee?.name ?? record?.employeeName ?? ''),
   },
   {
-    title: 'Mã nhân viên',
+    title: t('page.contract.index.columns.employeeCode') || 'Mã nhân viên',
     dataIndex: ['employee', 'employeeCode'],
     key: 'employeeCode',
     width: 140,
@@ -257,7 +261,7 @@ const columns = [
       ),
   },
   {
-    title: 'Hiệu lực',
+    title: t('page.contract.index.columns.effectiveDate') || 'Hiệu lực',
     dataIndex: 'effectiveDate',
     key: 'effectiveDate',
     width: 120,
@@ -266,7 +270,7 @@ const columns = [
       text ? dayjs(text).format('DD-MM-YYYY') : '',
   },
   {
-    title: 'Hết hạn',
+    title: t('page.contract.index.columns.expiryDate') || 'Hết hạn',
     dataIndex: 'expiryDate',
     key: 'expiryDate',
     width: 120,
@@ -274,7 +278,7 @@ const columns = [
       text ? dayjs(text).format('DD-MM-YYYY') : '',
   },
   {
-    title: 'Lương gross',
+    title: t('page.contract.index.columns.salaryGross') || 'Lương gross',
     dataIndex: 'salaryGross',
     key: 'salaryGross',
     width: 140,
@@ -284,7 +288,7 @@ const columns = [
     },
   },
   {
-    title: 'Chi phí hợp đồng',
+    title: t('page.contract.index.columns.totalCost') || 'Chi phí hợp đồng',
     dataIndex: 'totalCost',
     key: 'totalCost',
     width: 140,
@@ -294,7 +298,7 @@ const columns = [
     },
   },
   {
-    title: 'Trạng thái',
+    title: t('page.contract.index.columns.status') || 'Trạng thái',
     dataIndex: 'status',
     key: 'status',
     width: 120,
@@ -306,7 +310,7 @@ const columns = [
       ),
   },
   {
-    title: 'Hành động',
+    title: t('page.contract.index.columns.actions') || 'Hành động',
     key: 'actions',
     width: 140,
     customRender: ({ record }: { record: any }) =>
@@ -318,22 +322,22 @@ const columns = [
               type: 'link',
               onClick: () => onEdit(record),
             },
-            { default: () => 'Sửa' },
+            { default: () => t('page.contract.index.edit') || 'Sửa' },
           ),
           h(
             APopconfirm,
             {
-              title: 'Bạn có chắc muốn xóa hợp đồng này không?',
+              title: t('page.contract.index.deleteConfirm') || 'Bạn có chắc muốn xóa hợp đồng này không?',
               onConfirm: () => onDelete(record?.id),
-              okText: 'Xóa',
-              cancelText: 'Hủy',
+              okText: t('page.contract.index.delete') || 'Xóa',
+              cancelText: t('page.contract.form.cancel') || 'Hủy',
             },
             {
               default: () =>
                 h(
                   AButton,
                   { type: 'link', danger: true },
-                  { default: () => 'Xóa' },
+                    { default: () => t('page.contract.index.delete') || 'Xóa' },
                 ),
             },
           ),
@@ -353,7 +357,7 @@ function getStatusColor(s: number | string) {
   }
 }
 
-const editModel = ref<null | Partial<ContractFormModel>>(null);
+const editModel = ref<Partial<ContractFormModel> | undefined>(undefined);
 
 function onEdit(record: any) {
   editModel.value = { ...record };
@@ -415,20 +419,20 @@ async function onDelete(id: number | string | undefined) {
             />
             <ASelect
               v-model:value="query.isActive"
-              placeholder="Hiệu lực"
+                :placeholder="t('page.contract.index.effectivePlaceholder') || 'Hiệu lực'"
               style="width: 140px"
             >
-              <ASelect.Option :value="1">Hiệu lực</ASelect.Option>
-              <ASelect.Option :value="0">Hết hạn</ASelect.Option>
+                <ASelect.Option :value="1">{{ t('page.contract.index.effective') || 'Hiệu lực' }}</ASelect.Option>
+                <ASelect.Option :value="0">{{ t('page.contract.index.expired') || 'Hết hạn' }}</ASelect.Option>
             </ASelect>
           </div>
         </AFormItem>
         <ASpace>
-          <AButton type="primary" @click="onFilter">Lọc</AButton>
-          <AButton @click="onReset">Đặt lại</AButton>
+          <AButton type="primary" @click="onFilter">{{ t('page.contract.index.filter') || 'Lọc' }}</AButton>
+          <AButton @click="onReset">{{ t('page.contract.index.reset') || 'Đặt lại' }}</AButton>
         </ASpace>
       </AForm>
-      <AButton type="primary" @click="onCreateContract">Tạo hợp đồng</AButton>
+  <AButton type="primary" @click="onCreateContract">{{ t('page.contract.index.create') || 'Tạo hợp đồng' }}</AButton>
     </div>
 
     <ATable
@@ -440,7 +444,7 @@ async function onDelete(id: number | string | undefined) {
         current: query.current,
         pageSize: query.pageSize,
         total,
-        showTotal: (t: number) => `Tổng ${t}`,
+        showTotal: (totalCount: number) => `${t('page.contract.index.total') || 'Total'} ${totalCount}`,
       }"
       @change="onTableChange"
     />
@@ -450,7 +454,7 @@ async function onDelete(id: number | string | undefined) {
       :width="drawerWidth"
       :height="drawerHeight"
       :placement="drawerPlacement"
-      title="Tạo hợp đồng"
+  :title="t('page.contract.index.create') || 'Tạo hợp đồng'"
       destroy-on-close
       get-container="body"
       wrap-class-name="hrms-contract-drawer"

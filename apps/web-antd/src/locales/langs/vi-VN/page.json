@@ -22,6 +22,90 @@
     "leave": "Nghỉ phép",
     "contracttype": "Loại hợp đồng"
   },
+  "contract": {
+    "index": {
+      "title": "Danh sách hợp đồng",
+      "create": "Tạo hợp đồng",
+      "search": "Tìm kiếm",
+      "searchPlaceholder": "Mã/nhân viên...",
+      "statusPlaceholder": "Chọn trạng thái",
+      "contractTypePlaceholder": "Chọn loại hợp đồng",
+      "effectivePlaceholder": "Hiệu lực",
+      "effective": "Hiệu lực",
+      "expired": "Hết hạn",
+      "filter": "Lọc",
+      "reset": "Đặt lại",
+      "createSuccess": "Tạo hợp đồng thành công",
+      "createError": "Tạo hợp đồng thất bại",
+      "total": "Tổng",
+      "edit": "Sửa",
+      "delete": "Xóa",
+      "deleteConfirm": "Bạn có chắc muốn xóa hợp đồng này không?",
+      "columns": {
+        "contractCode": "Mã HĐ",
+        "contractName": "Tên HĐ",
+        "employee": "Nhân viên",
+        "contractType": "Loại hợp đồng",
+        "employeeCode": "Mã nhân viên",
+        "status": "Trạng thái",
+        "effectiveDate": "Hiệu lực",
+        "expiryDate": "Hết hạn",
+        "salaryGross": "Lương gross",
+        "salaryInfo": {
+          "title": "Thông tin Lương"
+        },
+        "statusApproval": {
+          "title": "Trạng thái phê duyệt"
+        },
+        "totalCost": "Tổng chi phí doanh nghiệp",
+        "actions": "Hành động"
+      }
+    },
+    "form": {
+      "contractType": "Loại hợp đồng",
+      "contractTypePlaceholder": "Chọn loại hợp đồng",
+      "duration": "Thời hạn",
+      "employeeInfo": {
+        "title": "Thông tin nhân viên",
+        "employee": "Nhân viên",
+        "selectEmployee": "Chọn nhân viên",
+        "phone": "Số điện thoại",
+        "email": "Email",
+        "identification": "CMND/CCCD",
+        "birthDate": "Ngày sinh",
+        "taxCode": "Mã số thuế"
+      },
+      "effectiveDate": "Hiệu lực",
+      "expiryDate": "Hết hạn",
+      "basicSalary": "Lương cơ bản",
+      "kpi": "KPI",
+      "allowance": "Phụ cấp",
+      "salaryGross": "Lương gross",
+      "employeeCosts": {
+        "title": "Chi phí NLĐ",
+        "feesHeader": "Các khoản phải nộp — Tổng: {total}",
+        "employeeSocial": "Xã hội",
+        "employeeHealth": "Y tế",
+        "employeeUnemployment": "Thất nghiệp",
+        "employeeUnion": "Công đoàn",
+        "taxFee": "Thuế TNCN"
+      },
+      "businessCosts": {
+        "title": "Chi phí doanh nghiệp",
+        "businessSocial": "BHXH",
+        "businessOccAcc": "TNLĐ-BNN",
+        "businessHealth": "BHYT",
+        "businessUnemployment": "BHTN",
+        "totalCost": "Tổng chi phí"
+      },
+      "insuranceType": "Loại bảo hiểm",
+      "insuranceValue": "Giá trị",
+      "insuranceSalary": "Mức lương đóng BH",
+      "salaryNet": "Lương thực nhận",
+      "save": "Lưu",
+      "cancel": "Hủy"
+    }
+  },
   "sms": {
     "title": "Sms",
     "provider": "Nhà cung cấp",
