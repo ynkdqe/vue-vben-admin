@@ -22,6 +22,12 @@
     "leave": "Nghỉ phép",
     "contracttype": "Loại hợp đồng"
   },
+  "identity": {
+    "title": "Quản lý định danh",
+    "user": "Người dùng",
+    "role": "Vai trò",
+    "organizationUnit": "Đơn vị tổ chức"
+  },
   "contract": {
     "index": {
       "title": "Danh sách hợp đồng",

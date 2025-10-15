@@ -22,6 +22,12 @@
     "leave": "Leave",
     "contracttype": "Contract Type"
   },
+  "identity": {
+    "title": "Identity Management",
+    "user": "User",
+    "role": "Role",
+    "organizationUnit": "Organization Unit"
+  },
   "contract": {
     "index": {
       "title": "Contract List",
