@@ -5,7 +5,14 @@ import type { ContractFormModel, Id } from '../models/contract-models';
 
 import { computed, reactive, ref, watch } from 'vue';
 
-import { Button, DatePicker, Form, Select, Space, message } from 'ant-design-vue';
+import {
+  Button,
+  DatePicker,
+  Form,
+  message,
+  Select,
+  Space,
+} from 'ant-design-vue';
 import dayjs from 'dayjs';
 
 import { requestClient } from '#/api/request';
@@ -185,16 +192,77 @@ const durationsOptions = computed(() => {
   const id = form.contractTypeId;
   if (!id) return [] as Array<{ label: string; value: number }>;
   const ct = contractTypeList.value.find((c: any) => c?.id === id);
-  const durs = ct?.durations ?? ct?.extraProperties?.durations ?? ct?.contractDurations ?? [];
+  const durs =
+    ct?.durations ??
+    ct?.extraProperties?.durations ??
+    ct?.contractDurations ??
+    [];
   if (!Array.isArray(durs)) return [];
   // Use the duration value (months) as option value. If backend uses an id for duration entries, adjust accordingly.
-  return durs.map((d: any) => ({ label: d?.name ?? String(d?.duration ?? ''), value: Number(d?.duration ?? 0) }));
+  return durs.map((d: any) => ({
+    label: d?.name ?? String(d?.duration ?? ''),
+    value: Number(d?.duration ?? 0),
+  }));
 });
 
-// salaryConfig is loaded from API; declare before watches that reference it to avoid TDZ errors
-const salaryConfig = ref<any>(null);
+// selectedDurationValue stores the numeric value (months) selected in the UI.
+const selectedDurationValue = ref<number | undefined>(undefined);
 
-// Compute employee-side fees when relevant inputs or salaryConfig change
+watch(
+  () => selectedDurationValue.value,
+  (val) => {
+    if (val === undefined) {
+      form.contractName = undefined;
+      return;
+    }
+    const id = form.contractTypeId;
+    if (!id) return;
+    const ct = contractTypeList.value.find((c: any) => c?.id === id);
+    const durs =
+      ct?.durations ??
+      ct?.extraProperties?.durations ??
+      ct?.contractDurations ??
+      [];
+    const found = Array.isArray(durs)
+      ? durs.find((d: any) => Number(d?.duration ?? 0) === Number(val))
+      : null;
+    if (found) {
+      form.contractName = found?.name ?? String(found?.duration ?? '');
+      const months = Number(found?.duration ?? 0);
+      if (!Number.isNaN(months)) onContractNameChange(months);
+    } else {
+      form.contractName = undefined;
+    }
+  },
+);
+
+// selectedContractType stores the full contract type object chosen from the contract type list
+const selectedContractType = ref<any>(null);
+
+function mapContractTypeToSalaryConfig(ct: any) {
+  if (!ct) return undefined;
+  return {
+    e_SocialInsurancePercent:
+      (Number(ct.employeeSocialInsurancePercent ?? 0) || 0) / 100,
+    e_HealthInsurancePercent:
+      (Number(ct.employeeHealthInsurancePercent ?? 0) || 0) / 100,
+    e_UnemployeeInsurancePercent:
+      (Number(ct.employeeUnemployeeInsurancePercent ?? 0) || 0) / 100,
+    e_UnionPercent: (Number(ct.employeeUnionPercent ?? 0) || 0) / 100,
+    e_MinTaxSalary: Number(ct.employeeMinTaxSalary ?? 0) || 0,
+    b_SocialInsurance:
+      (Number(ct.businessSocialInsurancePercent ?? 0) || 0) / 100,
+    b_OccAccInsurance:
+      (Number(ct.businessOccAccInsurancePercent ?? 0) || 0) / 100,
+    b_HealthInsurance:
+      (Number(ct.businessHealthInsurancePercent ?? 0) || 0) / 100,
+    b_UnemploymentInsurance:
+      (Number(ct.businessUnemploymentInsurancePercent ?? 0) || 0) / 100,
+    b_MinInsuranceSalary: Number(ct.minInsuranceSalary ?? 0) || 0,
+  };
+}
+
+// Compute employee-side fees when relevant inputs or selected contract type change
 // Note: heuristic for isLaborContract: contractTypeId === 1 or 2 => treated as labor contract.
 // Adjust mapping if your backend uses different ids.
 watch(
@@ -204,7 +272,7 @@ watch(
     form.salaryGross,
     form.contractTypeId,
     form.tax,
-    salaryConfig.value,
+    selectedContractType.value,
   ],
   () => {
     const insSalary = Number(form.insuranceSalary ?? 0);
@@ -212,28 +280,29 @@ watch(
     const gross = Number(form.salaryGross ?? 0);
     const taxPercent = Number(form.tax ?? 0);
 
+    const cfg = mapContractTypeToSalaryConfig(selectedContractType.value);
+
     // Social
-    form.employeeSocialInsuranceFee = calculateESocialInsuranceFee(
-      type,
-      insSalary,
-      salaryConfig.value,
-    );
+    const eSocial = calculateESocialInsuranceFee(type, insSalary, cfg);
+    form.employeeSocialInsuranceFee = eSocial;
+    // Also set short alias used by child components
+    (form as any).eSocialInsuranceFee = eSocial;
     // Health
-    form.employeeHealthInsuranceFee = calculateEHealthInsuranceFee(
-      type,
-      insSalary,
-      salaryConfig.value,
-    );
+    const eHealth = calculateEHealthInsuranceFee(type, insSalary, cfg);
+    form.employeeHealthInsuranceFee = eHealth;
+    (form as any).eHealthInsuranceFee = eHealth;
     // Unemployment
-    form.employeeUnemploymentInsuranceFee = calculateEUnemployeeInsuranceFee(
-      type,
-      insSalary,
-      salaryConfig.value,
-    );
-    // Union fee (employee) — use e_UnionPercent from config if present
+    const eUnemp = calculateEUnemployeeInsuranceFee(type, insSalary, cfg);
+    form.employeeUnemploymentInsuranceFee = eUnemp;
+    (form as any).eUnemploymentInsuranceFee = eUnemp;
+    // Union fee (employee) — use employeeUnionPercent from selected contract type if present (converted to decimal)
     try {
-      const unionPct = Number(salaryConfig.value?.e_UnionPercent ?? 0);
-      form.employeeUnionFee = Number((insSalary * (unionPct || 0) || 0).toFixed(2));
+      const unionPctDecimal = Number(cfg?.e_UnionPercent ?? 0);
+      const eUnion = Number(
+        (insSalary * (unionPctDecimal || 0) || 0).toFixed(2),
+      );
+      form.employeeUnionFee = eUnion;
+      (form as any).eUnionFee = eUnion;
     } catch {
       form.employeeUnionFee = undefined;
     }
@@ -241,12 +310,9 @@ watch(
     // Tax — determine if contract is labor type (heuristic)
     const isLabor =
       Number(form.contractTypeId) === 1 || Number(form.contractTypeId) === 2;
-    form.taxFee = calculateTaxFee(
-      isLabor,
-      gross,
-      taxPercent,
-      salaryConfig.value,
-    );
+    const taxFee = calculateTaxFee(isLabor, gross, taxPercent, cfg);
+    form.taxFee = taxFee;
+    form.taxFee = taxFee; // child binds to taxFee already, keep consistent
   },
   { immediate: true },
 );
@@ -270,7 +336,7 @@ function onEmployeeChange(v: Id | Id[] | undefined, option?: any) {
   }
 }
 
-function toDateOnly(d: Dayjs | string | Date | null | undefined) {
+function toDateOnly(d: Date | Dayjs | null | string | undefined) {
   // Always format to a date-only string like '2025-01-12'
   return d ? dayjs(d).format('YYYY-MM-DD') : undefined;
 }
@@ -316,9 +382,11 @@ function onSubmit() {
     employeeUnionFee: form.employeeUnionFee ?? 0,
     salaryNet: form.salaryNet ?? 0,
     businessSocialInsuranceFee: form.businessSocialInsuranceFee ?? 0,
-    businessCalculateOccAccInsuranceFee: form.businessCalculateOccAccInsuranceFee ?? 0,
+    businessCalculateOccAccInsuranceFee:
+      form.businessCalculateOccAccInsuranceFee ?? 0,
     businessHealthInsuranceFee: form.businessHealthInsuranceFee ?? 0,
-    businessUnemploymentInsuranceFee: form.businessUnemploymentInsuranceFee ?? 0,
+    businessUnemploymentInsuranceFee:
+      form.businessUnemploymentInsuranceFee ?? 0,
     totalCost: form.totalCost ?? 0,
     status: form.status,
     checkers: form.checkers || [],
@@ -343,6 +411,12 @@ async function loadContractTypes() {
       label: x?.name,
       value: x?.id,
     }));
+    // If a contract type is already selected in form, set selectedContractType so calculations can use it
+    if (form.contractTypeId) {
+      const chosen =
+        list.find((c: any) => c?.id === form.contractTypeId) ?? null;
+      selectedContractType.value = chosen;
+    }
   } catch {
     contractTypes.value = [];
   }
@@ -350,9 +424,15 @@ async function loadContractTypes() {
 
 watch(
   () => form.contractTypeId,
-  (v) => {
+  (_v) => {
     // clear the selected contractName (keep the field name as-is)
     form.contractName = undefined;
+    selectedDurationValue.value = undefined;
+    // store the selected contract type object for calculations
+    const ct =
+      contractTypeList.value.find((c: any) => c?.id === form.contractTypeId) ??
+      null;
+    selectedContractType.value = ct;
   },
 );
 
@@ -371,23 +451,31 @@ async function loadStatuses() {
   }
 }
 
-async function loadSalaryConfig() {
-  try {
-    const res = await requestClient.get<any>(
-      '/api/hrms/contract/salary-config',
-      {
-        responseReturn: 'body',
-      },
-    );
-    salaryConfig.value = res?.data ?? null;
-  } catch {
-    salaryConfig.value = null;
-  }
-}
-
 loadContractTypes();
 loadStatuses();
-loadSalaryConfig();
+
+// If the form already has a contractName (e.g., editing), try to select the matching duration option when durations load
+watch(
+  () => durationsOptions.value,
+  (opts) => {
+    if (!form.contractName) return;
+    const name = String(form.contractName ?? '').trim();
+    if (!name) return;
+    // try to match by name first
+    const byName = opts.find((o: any) => String(o.label ?? '').trim() === name);
+    if (byName) {
+      selectedDurationValue.value = byName.value;
+      return;
+    }
+    // try numeric match
+    const num = Number(name.replaceAll(/[^0-9.-]+/g, ''));
+    if (!Number.isNaN(num)) {
+      const byNum = opts.find((o: any) => Number(o.value) === num);
+      if (byNum) selectedDurationValue.value = byNum.value;
+    }
+  },
+  { immediate: true },
+);
 
 function numberFormatter(v: any) {
   if (v === null || v === undefined) return '';
@@ -404,16 +492,36 @@ function numberParser(v: any) {
     <!-- Loại hợp đồng & Nhân viên -->
     <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
       <AFormItem label="Loại hợp đồng" name="contractType">
-        <ASelect v-model:value="form.contractTypeId" placeholder="Chọn loại hợp đồng" class="flex-1">
-            <ASelectOption v-for="o in contractTypes" :key="o.value" :value="o.value">{{ o.label }}</ASelectOption>
-          </ASelect>
+        <ASelect
+          v-model:value="form.contractTypeId"
+          placeholder="Chọn loại hợp đồng"
+          class="flex-1"
+        >
+          <ASelectOption
+            v-for="o in contractTypes"
+            :key="o.value"
+            :value="o.value"
+          >
+            {{ o.label }}
+          </ASelectOption>
+        </ASelect>
       </AFormItem>
 
-    <AFormItem label="Thời hạn hợp đồng" name="contractName">
-      <ASelect v-model:value="form.contractName" @change="onContractNameChange" placeholder="Thời hạn" class="flex-1">
-        <ASelectOption v-for="d in durationsOptions" :key="d.value" :value="d.value">{{ d.label }}</ASelectOption>
-       </ASelect>
-    </AFormItem>
+      <AFormItem label="Thời hạn hợp đồng" name="contractName">
+        <ASelect
+          v-model:value="selectedDurationValue"
+          placeholder="Thời hạn"
+          class="flex-1"
+        >
+          <ASelectOption
+            v-for="d in durationsOptions"
+            :key="d.value"
+            :value="d.value"
+          >
+            {{ d.label }}
+          </ASelectOption>
+        </ASelect>
+      </AFormItem>
 
       <AFormItem label="Hiệu lực">
         <ADatePicker
@@ -450,7 +558,7 @@ function numberParser(v: any) {
     />
 
     <ContractEmployeeCosts
-      :form="form"
+      v-model:form="form"
       :insurance-types="insuranceTypes"
       :number-formatter="numberFormatter"
       :number-parser="numberParser"

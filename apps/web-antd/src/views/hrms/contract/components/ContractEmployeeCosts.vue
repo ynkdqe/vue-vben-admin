@@ -17,6 +17,15 @@ const props = defineProps<{
   numberFormatter: (v: any) => string;
   numberParser: (v: any) => any;
 }>();
+const emit = defineEmits<{
+  (e: 'update:form', v: Partial<ContractFormModel> & Record<string, any>): void;
+}>();
+
+function updateField(field: string, value: any) {
+  const copy = { ...props.form } as Record<string, any>;
+  copy[field] = value;
+  emit('update:form', copy as any);
+}
 const AFormItem = Form.Item;
 const ASelect = Select;
 const ASelectOption = Select.Option;
@@ -35,7 +44,11 @@ const ADivider = Divider;
         <AInputGroup class="-mx-1 flex flex-wrap" compact>
           <div class="w-full px-1 md:w-2/5">
             <div class="mb-1 text-xs text-gray-500">Loại</div>
-            <ASelect v-model:value="props.form.insuranceType" class="w-full">
+            <ASelect
+              :value="props.form.insuranceType"
+              class="w-full"
+              @change="(v) => updateField('insuranceType', v)"
+            >
               <ASelectOption
                 v-for="o in props.insuranceTypes"
                 :key="o.value"
@@ -48,7 +61,8 @@ const ADivider = Divider;
           <div class="w-full px-1 md:w-3/5">
             <div class="mb-1 text-xs text-gray-500">Giá trị</div>
             <AInputNumber
-              v-model:value="props.form.insuranceValue"
+              :value="props.form.insuranceValue"
+              @change="(v) => updateField('insuranceValue', v)"
               :min="0"
               class="w-full"
               placeholder="Giá trị BH"
@@ -79,7 +93,8 @@ const ADivider = Divider;
               <div class="w-full px-1 md:w-1/5">
                 <div class="mb-1 text-xs text-gray-500">Xã hội</div>
                 <AInputNumber
-                  v-model:value="props.form.eSocialInsuranceFee"
+                  :value="props.form.employeeSocialInsuranceFee"
+                  @change="(v) => updateField('employeeSocialInsuranceFee', v)"
                   :min="0"
                   class="w-full"
                   placeholder="Xã hội"
@@ -90,7 +105,8 @@ const ADivider = Divider;
               <div class="w-full px-1 md:w-1/5">
                 <div class="mb-1 text-xs text-gray-500">Y tế</div>
                 <AInputNumber
-                  v-model:value="props.form.eHealthInsuranceFee"
+                  :value="props.form.employeeHealthInsuranceFee"
+                  @change="(v) => updateField('employeeHealthInsuranceFee', v)"
                   :min="0"
                   class="w-full"
                   placeholder="Y tế"
@@ -101,7 +117,10 @@ const ADivider = Divider;
               <div class="w-full px-1 md:w-1/5">
                 <div class="mb-1 text-xs text-gray-500">Thất nghiệp</div>
                 <AInputNumber
-                  v-model:value="props.form.eUnemploymentInsuranceFee"
+                  :value="props.form.employeeUnemploymentInsuranceFee"
+                  @change="
+                    (v) => updateField('employeeUnemploymentInsuranceFee', v)
+                  "
                   :min="0"
                   class="w-full"
                   placeholder="Thất nghiệp"
@@ -112,7 +131,8 @@ const ADivider = Divider;
               <div class="w-full px-1 md:w-1/5">
                 <div class="mb-1 text-xs text-gray-500">Công đoàn</div>
                 <AInputNumber
-                  v-model:value="props.form.eUnionFee"
+                  :value="props.form.employeeUnionFee"
+                  @change="(v) => updateField('employeeUnionFee', v)"
                   :min="0"
                   class="w-full"
                   :formatter="props.numberFormatter"
@@ -122,7 +142,8 @@ const ADivider = Divider;
               <div class="w-full px-1 md:w-1/5">
                 <div class="mb-1 text-xs text-gray-500">Thuế TNCN</div>
                 <AInputNumber
-                  v-model:value="props.form.taxFee"
+                  :value="props.form.taxFee"
+                  @change="(v) => updateField('taxFee', v)"
                   :min="0"
                   class="w-full"
                   :formatter="props.numberFormatter"

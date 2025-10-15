@@ -3,6 +3,7 @@ import type { Dayjs } from 'dayjs';
 export type Id = number | string;
 
 export interface ContractFormModel {
+  id?: number | undefined;
   contractTypeId: number | undefined;
   contractName: string | undefined;
   employeeId: number | undefined;

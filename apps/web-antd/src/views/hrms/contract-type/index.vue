@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import type { TablePaginationConfig } from 'ant-design-vue';
-
 import type { ContractTypeDto } from '#/api/hrms/contract-type';
 
 import { h, onMounted, reactive, ref } from 'vue';
@@ -14,7 +12,6 @@ import {
   Table,
   Tag,
 } from 'ant-design-vue';
-import { Modal, InputNumber, Input } from 'ant-design-vue';
 
 import {
   createContractType,
@@ -31,9 +28,6 @@ const ATable = Table;
 const ASpace = Space;
 const APopconfirm = Popconfirm;
 const ATag = Tag;
-const AModal = Modal;
-const AInputNumber = InputNumber;
-const AInput = Input;
 
 const query = reactive({ current: 1, pageSize: 10, keyword: '' });
 const loading = ref(false);
@@ -179,6 +173,62 @@ async function onDurationsSaved() {
   await loadData();
 }
 
+function onCreateOpen() {
+  editModel.value = null;
+  showCreate.value = true;
+}
+
+function onCancel() {
+  showCreate.value = false;
+  editModel.value = null;
+}
+
+async function onSubmit(payload: Record<string, any>) {
+  try {
+    loading.value = true;
+    // If editModel has id, try update; otherwise create
+    if (editModel.value?.id) {
+      await requestClient.put(
+        `/api/hrms/contract-type/${editModel.value.id}`,
+        payload,
+        { responseReturn: 'body' },
+      );
+      message.success('Cập nhật loại hợp đồng thành công');
+    } else {
+      await createContractType(payload);
+      message.success('Tạo loại hợp đồng thành công');
+    }
+    showCreate.value = false;
+    editModel.value = null;
+    await loadData();
+  } catch {
+    message.error('Lưu thất bại');
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function onDelete(id: number | string) {
+  try {
+    loading.value = true;
+    await requestClient.delete(`/api/hrms/contract-type/${id}`, {
+      responseReturn: 'body',
+    });
+    message.success('Xóa thành công');
+    await loadData();
+  } catch {
+    message.error('Xóa thất bại');
+  } finally {
+    loading.value = false;
+  }
+}
+
+function onTableChange(pagination: any) {
+  query.current = pagination.current ?? query.current;
+  query.pageSize = pagination.pageSize ?? query.pageSize;
+  loadData();
+}
+
 onMounted(loadData);
 </script>
 
@@ -218,7 +268,12 @@ onMounted(loadData);
     >
       <ContractTypeForm @cancel="onCancel" @submit="onSubmit" />
     </ADrawer>
-    <DurationsModal :open="durationsModalVisible" :record="selectedRecord" @update:open="(v) => (durationsModalVisible = v)" @saved="onDurationsSaved" />
+    <DurationsModal
+      :open="durationsModalVisible"
+      :record="selectedRecord"
+      @update:open="(v) => (durationsModalVisible = v)"
+      @saved="onDurationsSaved"
+    />
   </div>
 </template>
 

@@ -2,7 +2,7 @@
 import type { TablePaginationConfig } from 'ant-design-vue';
 import type { Dayjs } from 'dayjs';
 
-import type { ContractFormModel } from './components/models/contract-models';
+import type { ContractFormModel } from './models/contract-models';
 
 import type { ContractDto } from '#/api/hrms/contract';
 
