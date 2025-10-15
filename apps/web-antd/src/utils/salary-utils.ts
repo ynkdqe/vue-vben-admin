@@ -30,42 +30,14 @@ function round2(n: number) {
   return Math.round(n * 100) / 100;
 }
 
-export function calculateESocialInsuranceFee(
+export function calculateInsuranceFee(
   insuranceType: InsuranceType | number,
   insuranceSalary: number,
-  config?: SalaryConfig,
+  percent: number | undefined,
 ): number {
   const t = Number(insuranceType);
   const salary = toNumber(insuranceSalary);
-  const pct = config?.e_SocialInsurancePercent ?? 0;
-  if (t === 1 || t === 2) {
-    return round2(salary * toNumber(pct));
-  }
-  return 0;
-}
-
-export function calculateEHealthInsuranceFee(
-  insuranceType: InsuranceType | number,
-  insuranceSalary: number,
-  config?: SalaryConfig,
-): number {
-  const t = Number(insuranceType);
-  const salary = toNumber(insuranceSalary);
-  const pct = config?.e_HealthInsurancePercent ?? 0;
-  if (t === 1 || t === 2) {
-    return round2(salary * toNumber(pct));
-  }
-  return 0;
-}
-
-export function calculateEUnemployeeInsuranceFee(
-  insuranceType: InsuranceType | number,
-  insuranceSalary: number,
-  config?: SalaryConfig,
-): number {
-  const t = Number(insuranceType);
-  const salary = toNumber(insuranceSalary);
-  const pct = config?.e_UnemployeeInsurancePercent ?? 0;
+  const pct = percent ?? 0;
   if (t === 1 || t === 2) {
     return round2(salary * toNumber(pct));
   }
@@ -147,8 +119,6 @@ export function calculateTaxFee(
 }
 
 export default {
-  calculateESocialInsuranceFee,
-  calculateEHealthInsuranceFee,
-  calculateEUnemployeeInsuranceFee,
+  calculateInsuranceFee,
   calculateTaxFee,
 };

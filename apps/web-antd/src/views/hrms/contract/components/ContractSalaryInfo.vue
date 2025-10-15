@@ -62,7 +62,7 @@ function updateField(field: string, value: any) {
       <AFormItem label="Lương gross">
         <AInputNumber
           :value="props.form.salaryGross"
-          @change="(v) => updateField('salaryGross', v)"
+          disabled
           :min="0"
           class="w-full"
           :formatter="props.numberFormatter"

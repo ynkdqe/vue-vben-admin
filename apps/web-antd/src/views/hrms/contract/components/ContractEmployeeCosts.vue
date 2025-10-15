@@ -19,12 +19,17 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{
   (e: 'update:form', v: Partial<ContractFormModel> & Record<string, any>): void;
+  (e: 'insuranceValueChange', v: number): void;
 }>();
 
 function updateField(field: string, value: any) {
   const copy = { ...props.form } as Record<string, any>;
   copy[field] = value;
   emit('update:form', copy as any);
+  if (field === 'insuranceValue') {
+    // notify parent that the user changed insuranceValue so it can avoid overwriting
+    emit('insuranceValueChange', value);
+  }
 }
 const AFormItem = Form.Item;
 const ASelect = Select;

@@ -17,9 +17,7 @@ import dayjs from 'dayjs';
 
 import { requestClient } from '#/api/request';
 import {
-  calculateEHealthInsuranceFee,
-  calculateESocialInsuranceFee,
-  calculateEUnemployeeInsuranceFee,
+  calculateInsuranceFee,
   calculateTaxFee,
 } from '#/utils/salary-utils';
 
@@ -170,12 +168,14 @@ watch(
     form.businessUnemploymentInsuranceFee,
   ],
   () => {
-    const total =
+    // Total business cost = salaryGross + all business insurance fees
+    const insuranceBusinessTotal =
       (form.businessSocialInsuranceFee || 0) +
       (form.businessCalculateOccAccInsuranceFee || 0) +
       (form.businessHealthInsuranceFee || 0) +
       (form.businessUnemploymentInsuranceFee || 0);
-    form.totalCost = Number(total.toFixed(2));
+    const total = Number((Number(form.salaryGross ?? 0) + insuranceBusinessTotal).toFixed(2));
+    form.totalCost = total;
   },
 );
 
@@ -188,6 +188,13 @@ const feesTotal = computed(() => {
     (form.taxFee || 0)
   );
 });
+
+// Track whether the user manually edited insuranceValue to avoid overwriting it
+const insuranceValueUserEdited = ref<boolean>(false);
+
+function markInsuranceValueEdited() {
+  insuranceValueUserEdited.value = true;
+}
 
 const durationsOptions = computed(() => {
   const id = form.contractTypeId;
@@ -286,18 +293,35 @@ watch(
 
     const cfg = mapContractTypeToSalaryConfig(selectedContractType.value);
     // Social
-    const eSocial = calculateESocialInsuranceFee(type, insSalary, cfg);
+    const eSocial = calculateInsuranceFee(type, insSalary, cfg?.e_SocialInsurancePercent);
     form.employeeSocialInsuranceFee = eSocial;
     // Also set short alias used by child components
     (form as any).eSocialInsuranceFee = eSocial;
     // Health
-    const eHealth = calculateEHealthInsuranceFee(type, insSalary, cfg);
+    const eHealth = calculateInsuranceFee(type, insSalary, cfg?.e_HealthInsurancePercent);
     form.employeeHealthInsuranceFee = eHealth;
     (form as any).eHealthInsuranceFee = eHealth;
     // Unemployment
-    const eUnemp = calculateEUnemployeeInsuranceFee(type, insSalary, cfg);
+    const eUnemp = calculateInsuranceFee(type, insSalary, cfg?.e_UnemployeeInsurancePercent);
     form.employeeUnemploymentInsuranceFee = eUnemp;
     (form as any).eUnemploymentInsuranceFee = eUnemp;
+
+    const bSocial = calculateInsuranceFee(type, insSalary, cfg?.b_SocialInsurance);
+    form.businessSocialInsuranceFee = bSocial;
+    (form as any).bSocialInsuranceFee = bSocial;
+
+    const bHealth = calculateInsuranceFee(type, insSalary, cfg?.b_HealthInsurance);
+    form.businessHealthInsuranceFee = bHealth;
+    (form as any).bHealthInsuranceFee = bHealth;
+
+    const bUnemp = calculateInsuranceFee(type, insSalary, cfg?.b_UnemploymentInsurance);
+    form.businessUnemploymentInsuranceFee = bUnemp;
+    (form as any).bUnemploymentInsuranceFee = bUnemp;
+
+    const bOccAcc = calculateInsuranceFee(type, insSalary, cfg?.b_OccAccInsurance);
+    form.businessCalculateOccAccInsuranceFee = bOccAcc;
+    (form as any).bOccAccInsuranceFee = bOccAcc;
+
     // Union fee (employee) — use employeeUnionPercent from selected contract type if present (converted to decimal)
     try {
       const unionPctDecimal = Number(cfg?.e_UnionPercent ?? 0);
@@ -499,6 +523,7 @@ watch(
       const insVal = form.insuranceValue;
       if (
         Number(form.insuranceType) === 1 &&
+        !insuranceValueUserEdited.value &&
         (insVal === undefined || insVal === null || Number(insVal) === 0)
       ) {
         form.insuranceValue = Number(basic.toFixed(2));
@@ -516,10 +541,13 @@ watch(
       const insVal = form.insuranceValue;
       if (
         Number(t) === 1 &&
+        !insuranceValueUserEdited.value &&
         (insVal === undefined || insVal === null || Number(insVal) === 0)
       ) {
         form.insuranceValue = Number(Number(form.basicSalary ?? 0).toFixed(2));
       }
+      // Reset user-edited flag when insurance type changes
+      insuranceValueUserEdited.value = false;
     } catch {
       // ignore
     }
@@ -602,6 +630,7 @@ watch(
     <ContractEmployeeCosts
       :form="form"
       @update:form="(v) => Object.assign(form, v)"
+      @insuranceValueChange="markInsuranceValueEdited"
       :insurance-types="insuranceTypes"
       :number-formatter="numberFormatter"
       :number-parser="numberParser"
