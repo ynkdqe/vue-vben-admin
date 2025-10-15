@@ -1,23 +1,28 @@
 <script setup lang="ts">
+import type { ContractFormModel } from '../models/contract-models';
+
+import { Divider, Form, Input, InputNumber } from 'ant-design-vue';
 import dayjs from 'dayjs';
-import { Form, InputNumber, Divider, Input } from 'ant-design-vue';
 
 import EmployeeSearchSelect from '#/components/EmployeeSearchSelect.vue';
 
+const props = defineProps<{
+  form: Partial<ContractFormModel> & Record<string, any>;
+}>();
+const emit = defineEmits<{
+  (e: 'change', v: any, opt?: any): void;
+  (e: 'update:model-value', v: any): void;
+  (e: 'update:form', v: Partial<ContractFormModel> & Record<string, any>): void;
+}>();
 const AFormItem = Form.Item;
 const AInput = Input;
 const AInputNumber = InputNumber;
 const ADivider = Divider;
-
-import type { ContractFormModel } from '../models/contract-models';
-const props = defineProps<{
-  form: Partial<ContractFormModel> & Record<string, any>;
-}>();
-
-const emit = defineEmits<{
-  (e: 'change', v: any, opt?: any): void;
-  (e: 'update:model-value', v: any): void;
-}>();
+function updateField(field: string, value: any) {
+  const copy = { ...props.form } as Record<string, any>;
+  copy[field] = value;
+  emit('update:form', copy as any);
+}
 </script>
 
 <template>
@@ -45,17 +50,28 @@ const emit = defineEmits<{
       </AFormItem>
       <AFormItem label="Ngày sinh">
         <AInput
-          :value="props.form.birthDate ? dayjs(props.form.birthDate).format('DD-MM-YYYY') : ''"
+          :value="
+            props.form.birthDate
+              ? dayjs(props.form.birthDate).format('DD-MM-YYYY')
+              : ''
+          "
           readonly
         />
       </AFormItem>
       <AFormItem label="Mã số thuế">
-        <AInputNumber v-model:value="props.form.tax" class="w-full" :min="0" />
+        <AInputNumber
+          :value="props.form.tax"
+          @change="(v) => updateField('tax', v)"
+          class="w-full"
+          :min="0"
+        />
       </AFormItem>
     </div>
   </div>
 </template>
 
 <style scoped>
-.grid { width: 100%; }
+.grid {
+  width: 100%;
+}
 </style>

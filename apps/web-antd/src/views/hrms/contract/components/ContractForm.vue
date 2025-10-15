@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { Dayjs } from 'dayjs';
-
 import type { ContractFormModel, Id } from '../models/contract-models';
 
 import { computed, reactive, ref, watch } from 'vue';
+
+import { formatDate } from '@vben/utils';
 
 import {
   Button,
@@ -23,9 +23,9 @@ import {
   calculateTaxFee,
 } from '#/utils/salary-utils';
 
+import ContractEmployerCosts from './ContractBusinessCosts.vue';
 import ContractEmployeeCosts from './ContractEmployeeCosts.vue';
 import ContractEmployeeInfo from './ContractEmployeeInfo.vue';
-import ContractEmployerCosts from './ContractEmployerCosts.vue';
 import ContractSalaryInfo from './ContractSalaryInfo.vue';
 import ContractStatusApproval from './ContractStatusApproval.vue';
 
@@ -69,7 +69,7 @@ const form = reactive<ContractFormModel>({
   kpi: undefined,
   allowance: undefined,
   salaryGross: undefined,
-  insuranceType: undefined,
+  insuranceType: 1,
   insuranceValue: undefined,
   insuranceSalary: undefined,
 
@@ -121,15 +121,16 @@ watch(
     form.employeeUnionFee,
   ],
   () => {
-    const gross = [form.basicSalary, form.kpi, form.allowance]
-      .map((n) => n || 0)
-      .reduce((a, b) => a + b, 0);
+    const basic = Number(form.basicSalary ?? 0);
+    const kpi = Number(form.kpi ?? 0);
+    const allowance = Number(form.allowance ?? 0);
 
+    const gross = basic + kpi + allowance;
     form.salaryGross = Number(gross.toFixed(2));
-
-    const deductions = [form.insuranceValue, form.taxFee, form.employeeUnionFee]
-      .map((n) => n || 0)
-      .reduce((a, b) => a + b, 0);
+    const insuranceVal = Number(form.insuranceValue ?? 0);
+    const taxFee = Number(form.taxFee ?? 0);
+    const unionFee = Number(form.employeeUnionFee ?? 0);
+    const deductions = insuranceVal + taxFee + unionFee;
 
     form.salaryNet = Number((gross - deductions).toFixed(2));
   },
@@ -259,6 +260,9 @@ function mapContractTypeToSalaryConfig(ct: any) {
     b_UnemploymentInsurance:
       (Number(ct.businessUnemploymentInsurancePercent ?? 0) || 0) / 100,
     b_MinInsuranceSalary: Number(ct.minInsuranceSalary ?? 0) || 0,
+    // Tax settings
+    e_IsTaxFixed: Boolean(ct.isTaxFixed),
+    e_TaxPercent: Number(ct.taxPercent ?? 0) || 0,
   };
 }
 
@@ -281,7 +285,6 @@ watch(
     const taxPercent = Number(form.tax ?? 0);
 
     const cfg = mapContractTypeToSalaryConfig(selectedContractType.value);
-
     // Social
     const eSocial = calculateESocialInsuranceFee(type, insSalary, cfg);
     form.employeeSocialInsuranceFee = eSocial;
@@ -336,11 +339,6 @@ function onEmployeeChange(v: Id | Id[] | undefined, option?: any) {
   }
 }
 
-function toDateOnly(d: Date | Dayjs | null | string | undefined) {
-  // Always format to a date-only string like '2025-01-12'
-  return d ? dayjs(d).format('YYYY-MM-DD') : undefined;
-}
-
 function onContractNameChange(val: any) {
   try {
     const months = Number(val);
@@ -368,8 +366,14 @@ function onSubmit() {
     contractTypeId: form.contractTypeId,
     contractName: form.contractName,
     employeeId: form.employeeId,
-    effectiveDate: toDateOnly(form.effectiveDate || null),
-    expiryDate: toDateOnly(form.expiryDate || null),
+    effectiveDate: formatDate(
+      form.effectiveDate?.toString() ?? dayjs().format('YYYY-MM-DD'),
+      'YYYY-MM-DD',
+    ),
+    expiryDate: formatDate(
+      form.expiryDate?.toString() ?? dayjs().format('YYYY-MM-DD'),
+      'YYYY-MM-DD',
+    ),
     basicSalary: form.basicSalary ?? 0,
     kpi: form.kpi ?? 0,
     allowance: form.allowance ?? 0,
@@ -485,6 +489,42 @@ function numberFormatter(v: any) {
 function numberParser(v: any) {
   return v ? v.replaceAll(',', '') : v;
 }
+
+// Default insuranceValue to basicSalary when insuranceType is fixed and user hasn't set a value
+watch(
+  () => form.basicSalary,
+  (val) => {
+    try {
+      const basic = Number(val ?? 0);
+      const insVal = form.insuranceValue;
+      if (
+        Number(form.insuranceType) === 1 &&
+        (insVal === undefined || insVal === null || Number(insVal) === 0)
+      ) {
+        form.insuranceValue = Number(basic.toFixed(2));
+      }
+    } catch {
+      // ignore
+    }
+  },
+);
+
+watch(
+  () => form.insuranceType,
+  (t) => {
+    try {
+      const insVal = form.insuranceValue;
+      if (
+        Number(t) === 1 &&
+        (insVal === undefined || insVal === null || Number(insVal) === 0)
+      ) {
+        form.insuranceValue = Number(Number(form.basicSalary ?? 0).toFixed(2));
+      }
+    } catch {
+      // ignore
+    }
+  },
+);
 </script>
 
 <template>
@@ -548,17 +588,20 @@ function numberParser(v: any) {
       :form="form"
       @change="onEmployeeChange"
       @update:model-value="(v) => (form.employeeId = v)"
+      @update:form="(v) => Object.assign(form, v)"
     />
 
     <!-- Lương -->
     <ContractSalaryInfo
       :form="form"
+      @update:form="(v) => Object.assign(form, v)"
       :number-formatter="numberFormatter"
       :number-parser="numberParser"
     />
 
     <ContractEmployeeCosts
-      v-model:form="form"
+      :form="form"
+      @update:form="(v) => Object.assign(form, v)"
       :insurance-types="insuranceTypes"
       :number-formatter="numberFormatter"
       :number-parser="numberParser"
@@ -567,11 +610,16 @@ function numberParser(v: any) {
 
     <ContractEmployerCosts
       :form="form"
+      @update:form="(v) => Object.assign(form, v)"
       :number-formatter="numberFormatter"
       :number-parser="numberParser"
     />
 
-    <ContractStatusApproval :form="form" :status-options="statusOptions" />
+    <ContractStatusApproval
+      :form="form"
+      :status-options="statusOptions"
+      @update:form="(v) => Object.assign(form, v)"
+    />
 
     <ASpace class="form-actions mt-4" align="center">
       <AButton @click="onCancel">Hủy</AButton>
