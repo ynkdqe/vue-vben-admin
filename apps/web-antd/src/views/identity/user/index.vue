@@ -1,11 +1,27 @@
 <script lang="ts" setup>
 import type { TableColumnsType, TablePaginationConfig } from 'ant-design-vue';
 
-import { computed, onMounted, reactive, ref } from 'vue';
+import type { IdentityUser } from '#/api/identity';
 
-import { Button, Card, Col, Form, Grid, Input, Row, Space, Table, message } from 'ant-design-vue';
+import { computed, h, onMounted, reactive, ref } from 'vue';
 
-import { getIdentityUsers, type IdentityUser } from '#/api/identity';
+import { SettingOutlined } from '@ant-design/icons-vue';
+import {
+  Button,
+  Card,
+  Col,
+  Dropdown,
+  Form,
+  Grid,
+  Input,
+  message,
+  Row,
+  Space,
+  Table,
+  Tag,
+} from 'ant-design-vue';
+
+import { getIdentityUsers } from '#/api/identity';
 
 const AButton = Button;
 const ACard = Card;
@@ -17,6 +33,8 @@ const ARow = Row;
 const AInput = Input;
 const ASpace = Space;
 const ATable = Table;
+const ATag = Tag;
+const ADropdown = Dropdown;
 
 interface IdentityUserTableItem extends IdentityUser {
   isActiveText: string;
@@ -44,7 +62,39 @@ const columns: TableColumnsType<IdentityUserTableItem> = [
   { title: 'Name', dataIndex: 'name', key: 'name' },
   { title: 'Email', dataIndex: 'email', key: 'email' },
   { title: 'Phone Number', dataIndex: 'phoneNumber', key: 'phoneNumber' },
-  { title: 'Active', dataIndex: 'isActiveText', key: 'isActiveText' },
+  {
+    title: 'Active',
+    dataIndex: 'isActiveText',
+    key: 'isActiveText',
+    customRender: ({ record: _record }) => {
+      const active = _record.isActive;
+      return active
+        ? h(ATag, { color: 'green' }, () => 'Active')
+        : h(ATag, { color: 'red' }, () => 'Inactive');
+    },
+  },
+  {
+    title: 'Action',
+    key: 'action',
+    width: 140,
+    customRender: ({ record: _record }) => {
+      const menu = [
+        { key: 'edit', label: 'Edit' },
+        { key: 'permission', label: 'Permission' },
+        { key: 'setPassword', label: 'Set password' },
+        { key: 'lock', label: 'Lock' },
+        { key: 'loginAs', label: 'Log in with this user' },
+        { key: 'delete', label: 'Delete' },
+      ];
+      return h(
+        ADropdown,
+        { menu: { items: menu }, trigger: ['click'] },
+        {
+          default: () => h(AButton, { icon: h(SettingOutlined) }),
+        },
+      );
+    },
+  },
 ];
 
 async function loadUsers() {
@@ -108,11 +158,15 @@ onMounted(() => {
                 v-model:value="query.keyword"
                 allow-clear
                 placeholder="Search by keyword"
-                @pressEnter="handleSearch"
+                @press-enter="handleSearch"
               />
             </AFormItem>
           </ACol>
-          <ACol :xs="24" :md="12" class="flex items-end justify-start md:justify-end">
+          <ACol
+            :xs="24"
+            :md="12"
+            class="flex items-end justify-start md:justify-end"
+          >
             <ASpace>
               <AButton type="primary" @click="handleSearch">Search</AButton>
               <AButton @click="handleReset">Reset</AButton>
