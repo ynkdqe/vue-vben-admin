@@ -19,9 +19,12 @@ import {
   Space,
   Table,
   Tag,
+  Menu,
 } from 'ant-design-vue';
 
 import { getIdentityUsers } from '#/api/identity';
+
+import { formatDate } from '@vben/utils';
 
 const AButton = Button;
 const ACard = Card;
@@ -35,6 +38,8 @@ const ASpace = Space;
 const ATable = Table;
 const ATag = Tag;
 const ADropdown = Dropdown;
+const AMenu = Menu;
+const AMenuItem = Menu.Item;
 
 interface IdentityUserTableItem extends IdentityUser {
   isActiveText: string;
@@ -58,6 +63,37 @@ const screens = AGrid.useBreakpoint();
 const isMobile = computed(() => !screens.value?.md);
 
 const columns: TableColumnsType<IdentityUserTableItem> = [
+  {
+    title: 'Action',
+    key: 'action',
+    width: 140,
+    customRender: ({ record: _record }) => {
+      const menuVNode = h(
+        AMenu,
+        {
+          onClick: (info: any) => handleAction(_record, info.key),
+        },
+        {
+          default: () => [
+            h(AMenuItem, { key: 'edit' }, () => 'Edit'),
+            h(AMenuItem, { key: 'permission' }, () => 'Permission'),
+            h(AMenuItem, { key: 'setPassword' }, () => 'Set password'),
+            h(AMenuItem, { key: 'lock' }, () => 'Lock'),
+            h(AMenuItem, { key: 'loginAs' }, () => 'Log in with this user'),
+            h(AMenuItem, { key: 'delete' }, () => 'Delete'),
+          ],
+        },
+      );
+
+      return h(
+        ADropdown,
+        { overlay: menuVNode, trigger: ['click'] },
+        {
+          default: () => h(AButton, { icon: h(SettingOutlined) }),
+        },
+      );
+    },
+  },
   { title: 'Username', dataIndex: 'userName', key: 'userName' },
   { title: 'Name', dataIndex: 'name', key: 'name' },
   { title: 'Email', dataIndex: 'email', key: 'email' },
@@ -72,30 +108,66 @@ const columns: TableColumnsType<IdentityUserTableItem> = [
         ? h(ATag, { color: 'green' }, () => 'Active')
         : h(ATag, { color: 'red' }, () => 'Inactive');
     },
+    
   },
   {
-    title: 'Action',
-    key: 'action',
-    width: 140,
+    title: 'Locked',
+    dataIndex: 'lockoutEnabled',
+    key: 'lockoutEnabled',
+    width: 120,
     customRender: ({ record: _record }) => {
-      const menu = [
-        { key: 'edit', label: 'Edit' },
-        { key: 'permission', label: 'Permission' },
-        { key: 'setPassword', label: 'Set password' },
-        { key: 'lock', label: 'Lock' },
-        { key: 'loginAs', label: 'Log in with this user' },
-        { key: 'delete', label: 'Delete' },
-      ];
-      return h(
-        ADropdown,
-        { menu: { items: menu }, trigger: ['click'] },
-        {
-          default: () => h(AButton, { icon: h(SettingOutlined) }),
-        },
-      );
+      const locked = _record.lockoutEnabled;
+      return locked
+        ? h(ATag, { color: 'red' }, () => 'Locked')
+        : h(ATag, { color: 'green' }, () => 'Unlocked');
+    },
+  },
+  { title: 'Failed logins', dataIndex: 'accessFailedCount', key: 'accessFailedCount', width: 120,
+    customRender: ({ record: _record }) => {
+      const locked = _record.lockoutEnabled;
+      return locked
+        ? h(ATag, { color: 'red' }, () => 'Locked')
+        : h(ATag, { color: 'green' }, () => 'Unlocked');
+    },
+  },
+  { title: 'Failed logins', dataIndex: 'accessFailedCount', key: 'accessFailedCount', width: 120, },
+  { title: 'Creation Time', dataIndex: 'creationTime', key: 'creationTime',
+    customRender: ({ record: _record }) => {
+      return h(ATag, { color: 'blue' }, () => formatDate(_record.creationTime,'DD-MM-YYYY HH:mm:ss'));
+    },
+  },
+  { title: 'Last Modification Time', dataIndex: 'lastModificationTime', key: 'lastModificationTime',
+    customRender: ({ record: _record }) => {
+      return h(ATag, { color: 'blue' }, () => formatDate(_record.lastModificationTime ?? '','DD-MM-YYYY HH:mm:ss'));
     },
   },
 ];
+
+function handleAction(record: IdentityUserTableItem, key: string) {
+  // basic scaffold for handling actions from the settings menu
+  switch (key) {
+    case 'edit':
+      message.info(`Edit ${record.userName}`);
+      break;
+    case 'permission':
+      message.info(`Permission ${record.userName}`);
+      break;
+    case 'setPassword':
+      message.info(`Set password for ${record.userName}`);
+      break;
+    case 'lock':
+      message.info(`Lock ${record.userName}`);
+      break;
+    case 'loginAs':
+      message.info(`Log in as ${record.userName}`);
+      break;
+    case 'delete':
+      message.info(`Delete ${record.userName}`);
+      break;
+    default:
+      message.info(`Action ${key} on ${record.userName}`);
+  }
+}
 
 async function loadUsers() {
   const current = pagination.current ?? 1;
@@ -151,28 +223,22 @@ onMounted(() => {
         class="space-y-2 md:space-y-0"
         @submit.prevent
       >
-        <ARow :gutter="16">
-          <ACol :xs="24" :md="12">
-            <AFormItem label="Keyword" name="keyword">
-              <AInput
-                v-model:value="query.keyword"
-                allow-clear
-                placeholder="Search by keyword"
-                @press-enter="handleSearch"
-              />
-            </AFormItem>
-          </ACol>
-          <ACol
-            :xs="24"
-            :md="12"
-            class="flex items-end justify-start md:justify-end"
-          >
-            <ASpace>
-              <AButton type="primary" @click="handleSearch">Search</AButton>
-              <AButton @click="handleReset">Reset</AButton>
-            </ASpace>
-          </ACol>
-        </ARow>
+        <AFormItem label="Từ khóa" :style="isMobile ? { width: '100%' } : {}">
+            <AInput
+              v-model:value="query.keyword"
+              placeholder="Tìm theo tên, mã, email..."
+              allow-clear
+              :style="isMobile ? { width: '100%' } : { minWidth: '260px' }"
+              @press-enter="handleSearch"
+            />
+        </AFormItem>
+          <AFormItem :style="isMobile ? { width: '100%' } : {}">
+          <ASpace :wrap="true" :style="isMobile ? { width: '100%' } : {}">
+            <AButton :block="isMobile" type="primary" @click="handleSearch">
+              Tìm kiếm
+            </AButton>
+          </ASpace>
+        </AFormItem>
       </AForm>
     </ACard>
 

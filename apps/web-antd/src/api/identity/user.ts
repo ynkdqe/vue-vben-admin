@@ -7,6 +7,9 @@ export interface IdentityUser {
   email?: string | null;
   phoneNumber?: string | null;
   isActive?: boolean;
+  lockoutEnabled?: boolean;
+  creationTime: string | number;
+  lastModificationTime?: string | number;
 }
 
 export interface GetIdentityUsersParams {
