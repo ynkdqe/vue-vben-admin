@@ -20,6 +20,7 @@ import {
 } from 'ant-design-vue';
 
 import { requestClient } from '#/api/request';
+import { formatDate } from '@vben/utils';
 
 const AButton = Button;
 const ACard = Card;
@@ -42,7 +43,7 @@ interface RoleItem {
   isDefault?: boolean;
   isStatic?: boolean;
   isPublic?: boolean;
-  creationTime?: string;
+  creationTime: number | string;
 }
 
 const query = reactive({ keyword: '' });
@@ -68,6 +69,9 @@ const columns: TableColumnsType<RoleItem> = [
           default: () => [
             h(AMenuItem, { key: 'edit' }, () => 'Edit'),
             h(AMenuItem, { key: 'delete' }, () => 'Delete'),
+            h(AMenuItem, { key: 'permission' }, () => 'Permissions'),
+            h(AMenuItem, { key: 'moveAllUsers' }, () => 'Move All Users'),
+
           ],
         },
       );
@@ -79,7 +83,11 @@ const columns: TableColumnsType<RoleItem> = [
   { title: 'Default', dataIndex: 'isDefault', key: 'isDefault', customRender: ({ record }) => record.isDefault ? h(ATag, { color: 'green' }, () => 'Yes') : h(ATag, { color: 'default' }, () => 'No') },
   { title: 'Static', dataIndex: 'isStatic', key: 'isStatic' },
   { title: 'Public', dataIndex: 'isPublic', key: 'isPublic' },
-  { title: 'Created', dataIndex: 'creationTime', key: 'creationTime' },
+  { title: 'Creation Time', dataIndex: 'creationTime', key: 'creationTime',
+    customRender: ({ record: _record }) => {
+      return h(ATag, { color: 'blue' }, () => formatDate(_record.creationTime,'DD-MM-YYYY HH:mm:ss'));
+    },
+  },
 ];
 
 function handleAction(record: RoleItem, key: string) {

@@ -7,7 +7,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Identity',
     path: '/identity',
     meta: {
-      icon: 'mdi:message-text-outline',
+      icon: 'mdi:account-cog-outline',
       order: 21,
       title: $t('page.identity.title'),
     },
@@ -17,7 +17,7 @@ const routes: RouteRecordRaw[] = [
         path: '/identity/user',
         component: () => import('#/views/identity/user/index.vue'),
         meta: {
-          icon: 'mdi:message-processing-outline',
+          icon: 'mdi:account-circle',
           title: $t('page.identity.user'),
         },
       },
@@ -26,7 +26,7 @@ const routes: RouteRecordRaw[] = [
         path: '/identity/role',
         component: () => import('#/views/identity/role/index.vue'),
         meta: {
-          icon: 'mdi:server-outline',
+          icon: 'mdi:account-check',
           title: $t('page.identity.role'),
         },
       },
@@ -35,7 +35,7 @@ const routes: RouteRecordRaw[] = [
         path: '/identity/organization',
         component: () => import('#/views/identity/organization/index.vue'),
         meta: {
-          icon: 'mdi:bell-outline',
+          icon: 'mdi:office-building',
           title: $t('page.identity.organizationUnit'),
         },
       },
