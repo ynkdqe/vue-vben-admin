@@ -1,5 +1,13 @@
 <script lang="ts" setup>
-import { computed, defineEmits, defineProps, ref, watch } from 'vue';
+import {
+  computed,
+  defineEmits,
+  defineProps,
+  onMounted,
+  onUnmounted,
+  ref,
+  watch,
+} from 'vue';
 
 import { Button, Checkbox, Drawer, Input, message } from 'ant-design-vue';
 
@@ -35,6 +43,28 @@ const ACheckbox = Checkbox;
 const visible = computed({
   get: () => !!props.modelValue,
   set: (v: boolean) => emit('update:modelValue', v),
+});
+
+// responsive drawer width: full on small screens, fixed on desktop
+const drawerWidth = ref('600px');
+function updateDrawerWidth() {
+  try {
+    const w = window.innerWidth;
+    // mobile breakpoint ~640px
+    drawerWidth.value = w <= 640 ? '100%' : '600px';
+  } catch {
+    // fallback
+    drawerWidth.value = '600px';
+  }
+}
+
+onMounted(() => {
+  updateDrawerWidth();
+  window.addEventListener('resize', updateDrawerWidth);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateDrawerWidth);
 });
 
 const filter = ref('');
@@ -157,7 +187,7 @@ function toggleGrantAll(v: boolean) {
     v-model:open="visible"
     :title="props.title || 'Permissions'"
     placement="left"
-    width="600px"
+    :width="drawerWidth"
     :closable="true"
   >
     <!-- Search and grant -->
@@ -175,11 +205,11 @@ function toggleGrantAll(v: boolean) {
       </label>
     </div>
     <!-- Content -->
-    <div class="mt-4 rounded-lg border p-4">
-      <div class="flex">
+    <div class="rounded-lg border p-4">
+      <div class="flex flex-col md:flex-row">
         <!-- Left group list -->
-        <div class="w-56 pr-4">
-          <div class="overflow-auto pr-2">
+        <div class="mb-4 w-full pr-0 md:mb-0 md:w-56 md:pr-4">
+          <div class="max-h-[240px] overflow-auto pr-2 md:max-h-[420px]">
             <div class="space-y-2">
               <AButton
                 v-for="g in groups"
@@ -197,7 +227,7 @@ function toggleGrantAll(v: boolean) {
         </div>
 
         <!-- Right permission list -->
-        <div class="flex-1 pl-6">
+        <div class="flex-1 pl-0 md:pl-6">
           <div class="flex items-center gap-4">
             <label class="flex items-center gap-2 text-sm">
               <ACheckbox v-model:checked="groupAllChecked" />
@@ -205,7 +235,7 @@ function toggleGrantAll(v: boolean) {
             </label>
           </div>
 
-          <div class="mt-4 overflow-auto">
+          <div class="mt-4 max-h-[260px] overflow-auto lg:max-h-[420px]">
             <div
               v-for="perm in currentPermissions"
               :key="perm.name"
