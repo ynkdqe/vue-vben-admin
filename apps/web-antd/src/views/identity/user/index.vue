@@ -5,34 +5,32 @@ import type { IdentityUser } from '#/api/identity';
 
 import { computed, h, onMounted, reactive, ref } from 'vue';
 
+import { formatDate } from '@vben/utils';
+
 import { SettingOutlined } from '@ant-design/icons-vue';
 import {
   Button,
   Card,
-  Col,
   Dropdown,
   Form,
   Grid,
   Input,
+  Menu,
   message,
-  Row,
   Space,
   Table,
   Tag,
-  Menu,
 } from 'ant-design-vue';
 
 import { getIdentityUsers } from '#/api/identity';
 
-import { formatDate } from '@vben/utils';
+import Permission from '../../../components/Permission.vue';
 
 const AButton = Button;
 const ACard = Card;
 const AForm = Form;
 const AFormItem = Form.Item;
 const AGrid = Grid;
-const ACol = Col;
-const ARow = Row;
 const AInput = Input;
 const ASpace = Space;
 const ATable = Table;
@@ -58,6 +56,17 @@ const pagination = reactive<TablePaginationConfig>({
 
 const loading = ref(false);
 const dataSource = ref<IdentityUserTableItem[]>([]);
+
+// permission popup state
+const showPermission = ref(false);
+const permissionProviderName = ref('');
+const permissionProviderKey = ref('');
+const permissionTitle = ref('');
+
+function onPermissionSave(payload: { granted: string[] }) {
+  // placeholder: you can call API to persist granted permissions here
+  message.success(`Saved ${payload.granted.length} permissions`);
+}
 
 const screens = AGrid.useBreakpoint();
 const isMobile = computed(() => !screens.value?.md);
@@ -108,7 +117,6 @@ const columns: TableColumnsType<IdentityUserTableItem> = [
         ? h(ATag, { color: 'green' }, () => 'Active')
         : h(ATag, { color: 'red' }, () => 'Inactive');
     },
-    
   },
   {
     title: 'Locked',
@@ -122,7 +130,11 @@ const columns: TableColumnsType<IdentityUserTableItem> = [
         : h(ATag, { color: 'green' }, () => 'Unlocked');
     },
   },
-  { title: 'Failed logins', dataIndex: 'accessFailedCount', key: 'accessFailedCount', width: 120,
+  {
+    title: 'Failed logins',
+    dataIndex: 'accessFailedCount',
+    key: 'accessFailedCount',
+    width: 120,
     customRender: ({ record: _record }) => {
       const locked = _record.lockoutEnabled;
       return locked
@@ -130,15 +142,30 @@ const columns: TableColumnsType<IdentityUserTableItem> = [
         : h(ATag, { color: 'green' }, () => 'Unlocked');
     },
   },
-  { title: 'Failed logins', dataIndex: 'accessFailedCount', key: 'accessFailedCount', width: 120, },
-  { title: 'Creation Time', dataIndex: 'creationTime', key: 'creationTime',
+  {
+    title: 'Failed logins',
+    dataIndex: 'accessFailedCount',
+    key: 'accessFailedCount',
+    width: 120,
+  },
+  {
+    title: 'Creation Time',
+    dataIndex: 'creationTime',
+    key: 'creationTime',
     customRender: ({ record: _record }) => {
-      return h(ATag, { color: 'blue' }, () => formatDate(_record.creationTime,'DD-MM-YYYY HH:mm:ss'));
+      return h(ATag, { color: 'blue' }, () =>
+        formatDate(_record.creationTime, 'DD-MM-YYYY HH:mm:ss'),
+      );
     },
   },
-  { title: 'Last Modification Time', dataIndex: 'lastModificationTime', key: 'lastModificationTime',
+  {
+    title: 'Last Modification Time',
+    dataIndex: 'lastModificationTime',
+    key: 'lastModificationTime',
     customRender: ({ record: _record }) => {
-      return h(ATag, { color: 'blue' }, () => formatDate(_record.lastModificationTime ?? '','DD-MM-YYYY HH:mm:ss'));
+      return h(ATag, { color: 'blue' }, () =>
+        formatDate(_record.lastModificationTime ?? '', 'DD-MM-YYYY HH:mm:ss'),
+      );
     },
   },
 ];
@@ -146,26 +173,38 @@ const columns: TableColumnsType<IdentityUserTableItem> = [
 function handleAction(record: IdentityUserTableItem, key: string) {
   // basic scaffold for handling actions from the settings menu
   switch (key) {
-    case 'edit':
-      message.info(`Edit ${record.userName}`);
-      break;
-    case 'permission':
-      message.info(`Permission ${record.userName}`);
-      break;
-    case 'setPassword':
-      message.info(`Set password for ${record.userName}`);
-      break;
-    case 'lock':
-      message.info(`Lock ${record.userName}`);
-      break;
-    case 'loginAs':
-      message.info(`Log in as ${record.userName}`);
-      break;
-    case 'delete':
+    case 'delete': {
       message.info(`Delete ${record.userName}`);
       break;
-    default:
+    }
+    case 'edit': {
+      message.info(`Edit ${record.userName}`);
+      break;
+    }
+    case 'lock': {
+      message.info(`Lock ${record.userName}`);
+      break;
+    }
+    case 'loginAs': {
+      message.info(`Log in as ${record.userName}`);
+      break;
+    }
+    case 'permission': {
+      // open permission modal for this user
+      // providerName = 'U', providerKey = record.id
+      permissionProviderName.value = 'U';
+      permissionProviderKey.value = (record.id as string) || String(record.id);
+      permissionTitle.value = `Permissions - ${record.userName}`;
+      showPermission.value = true;
+      break;
+    }
+    case 'setPassword': {
+      message.info(`Set password for ${record.userName}`);
+      break;
+    }
+    default: {
       message.info(`Action ${key} on ${record.userName}`);
+    }
   }
 }
 
@@ -196,13 +235,6 @@ function handleSearch() {
   loadUsers();
 }
 
-function handleReset() {
-  query.keyword = '';
-  pagination.current = 1;
-  pagination.pageSize = 10;
-  loadUsers();
-}
-
 function handleTableChange(pager: TablePaginationConfig) {
   pagination.current = pager.current ?? 1;
   pagination.pageSize = pager.pageSize ?? 10;
@@ -224,15 +256,15 @@ onMounted(() => {
         @submit.prevent
       >
         <AFormItem label="Từ khóa" :style="isMobile ? { width: '100%' } : {}">
-            <AInput
-              v-model:value="query.keyword"
-              placeholder="Tìm theo tên, mã, email..."
-              allow-clear
-              :style="isMobile ? { width: '100%' } : { minWidth: '260px' }"
-              @press-enter="handleSearch"
-            />
+          <AInput
+            v-model:value="query.keyword"
+            placeholder="Tìm theo tên, mã, email..."
+            allow-clear
+            :style="isMobile ? { width: '100%' } : { minWidth: '260px' }"
+            @press-enter="handleSearch"
+          />
         </AFormItem>
-          <AFormItem :style="isMobile ? { width: '100%' } : {}">
+        <AFormItem :style="isMobile ? { width: '100%' } : {}">
           <ASpace :wrap="true" :style="isMobile ? { width: '100%' } : {}">
             <AButton :block="isMobile" type="primary" @click="handleSearch">
               Tìm kiếm
@@ -253,5 +285,12 @@ onMounted(() => {
         @change="handleTableChange"
       />
     </ACard>
+    <Permission
+      v-model="showPermission"
+      :provider-name="permissionProviderName"
+      :provider-key="permissionProviderKey"
+      :title="permissionTitle"
+      @save="onPermissionSave"
+    />
   </div>
 </template>
