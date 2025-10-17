@@ -19,6 +19,11 @@ import {
   message,
   Space,
   Table,
+  Drawer,
+  Tabs,
+  Checkbox,
+  Divider,
+  Select,
   Tag,
 } from 'ant-design-vue';
 
@@ -38,6 +43,11 @@ const ATag = Tag;
 const ADropdown = Dropdown;
 const AMenu = Menu;
 const AMenuItem = Menu.Item;
+const ADrawer = Drawer;
+const ATabs = Tabs;
+const ACheckbox = Checkbox;
+const ADivider = Divider;
+const ASelect = Select;
 
 interface IdentityUserTableItem extends IdentityUser {
   isActiveText: string;
@@ -62,6 +72,31 @@ const showPermission = ref(false);
 const permissionProviderName = ref('');
 const permissionProviderKey = ref('');
 const permissionTitle = ref('');
+
+// edit drawer state
+const showEditDrawer = ref(false);
+const editingUser = ref<IdentityUser | null>(null);
+const editingSurname = ref('');
+
+function openEditDrawer(user: IdentityUser) {
+  editingUser.value = { ...user };
+  // no surname field on the API; keep a local surname for the UI
+  editingSurname.value = '';
+  showEditDrawer.value = true;
+}
+
+function closeEditDrawer() {
+  showEditDrawer.value = false;
+  editingUser.value = null;
+  editingSurname.value = '';
+}
+
+function saveUserEdits() {
+  // placeholder: call API to save edits. For now, just show a message and close.
+  message.success(`Saved changes for ${editingUser.value?.userName}`);
+  // you may want to merge editingSurname into the payload if backend supports it
+  closeEditDrawer();
+}
 
 function onPermissionSave(payload: { granted: string[] }) {
   // placeholder: you can call API to persist granted permissions here
@@ -178,7 +213,8 @@ function handleAction(record: IdentityUserTableItem, key: string) {
       break;
     }
     case 'edit': {
-      message.info(`Edit ${record.userName}`);
+      // open edit drawer with tabs (User Information, Roles, Organization units)
+      openEditDrawer(record as IdentityUser);
       break;
     }
     case 'lock': {
@@ -292,5 +328,70 @@ onMounted(() => {
       :title="permissionTitle"
       @save="onPermissionSave"
     />
+    <ADrawer v-model:open="showEditDrawer" width="720px" :title="editingUser?.userName ? 'Edit - ' + editingUser.userName : 'Edit'">
+      <ATabs defaultActiveKey="1">
+        <ATabs.TabPane key="1" tab="User Information">
+          <div class="space-y-4 p-4">
+            <AForm layout="vertical" :model="editingUser">
+              <AForm.Item label="User name *">
+                <AInput v-model:value="editingUser.userName" />
+              </AForm.Item>
+
+              <div class="grid grid-cols-2 gap-4">
+                <AForm.Item label="Name">
+                  <AInput v-model:value="editingUser.name" />
+                </AForm.Item>
+                <AForm.Item label="Surname">
+                  <AInput v-model:value="editingSurname" />
+                </AForm.Item>
+              </div>
+
+              <AForm.Item label="Email address *">
+                <AInput v-model:value="editingUser.email" />
+              </AForm.Item>
+
+              <AForm.Item label="Phone number">
+                <AInput v-model:value="editingUser.phoneNumber" />
+              </AForm.Item>
+
+              <div class="flex items-center gap-6">
+                <ACheckbox v-model:checked="editingUser.isActive">Active</ACheckbox>
+                <ACheckbox v-model:checked="editingUser.lockoutEnabled">Account lockout</ACheckbox>
+              </div>
+
+              <div class="flex items-center gap-6 mt-2">
+                <ACheckbox> Email confirmed </ACheckbox>
+                <ACheckbox> Phone number confirmed </ACheckbox>
+              </div>
+
+              <div class="mt-2">
+                <ACheckbox> Force password change </ACheckbox>
+              </div>
+            </AForm>
+          </div>
+        </ATabs.TabPane>
+
+        <ATabs.TabPane key="2" tab="Roles (1)">
+          <div class="p-4">
+            <!-- roles list placeholder: should load roles for user -->
+            <p>Roles for user will appear here.</p>
+          </div>
+        </ATabs.TabPane>
+
+        <ATabs.TabPane key="3" tab="Organization units (1)">
+          <div class="p-4">
+            <!-- organization units placeholder: should load org units for user -->
+            <p>Organization units for user will appear here.</p>
+          </div>
+        </ATabs.TabPane>
+      </ATabs>
+
+      <template #footer>
+        <div class="flex justify-end gap-3">
+          <AButton @click="closeEditDrawer">Cancel</AButton>
+          <AButton type="primary" @click="saveUserEdits">Save</AButton>
+        </div>
+      </template>
+    </ADrawer>
   </div>
 </template>

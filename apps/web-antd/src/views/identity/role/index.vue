@@ -21,6 +21,7 @@ import {
 
 import { requestClient } from '#/api/request';
 import { formatDate } from '@vben/utils';
+import Permission from '#/components/Permission.vue';
 
 const AButton = Button;
 const ACard = Card;
@@ -93,7 +94,27 @@ const columns: TableColumnsType<RoleItem> = [
 function handleAction(record: RoleItem, key: string) {
   // placeholder
   // eslint-disable-next-line no-console
+  if (key === 'permission') {
+    permissionProviderName.value = 'R';
+    permissionProviderKey.value = record.id;
+    permissionTitle.value = `Permissions — ${record.name}`;
+    showPermission.value = true;
+    return;
+  }
+
   console.log('role action', key, record);
+}
+
+const showPermission = ref(false);
+const permissionProviderName = ref('R');
+const permissionProviderKey = ref('');
+const permissionTitle = ref('');
+
+function onPermissionSave(payload: any) {
+  // payload.granted contains granted permission names
+  // For now, just log and close; in future call API to update permissions
+  console.log('permissions saved', payload);
+  showPermission.value = false;
 }
 
 async function loadRoles() {
@@ -167,6 +188,13 @@ function handleReset() {
     <ACard class="shadow-sm">
       <ATable :columns="columns" :data-source="dataSource" :loading="loading" row-key="id" />
     </ACard>
+    <Permission
+      v-model="showPermission"
+      :provider-name="permissionProviderName"
+      :provider-key="permissionProviderKey"
+      :title="permissionTitle"
+      @save="onPermissionSave"
+    />
   </div>
 </template>
 
