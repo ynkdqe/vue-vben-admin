@@ -179,21 +179,19 @@ function toggleGrantAll(v: boolean) {
       <div class="flex">
         <!-- Left group list -->
         <div class="w-56 pr-4">
-          <div class="max-h-[420px] overflow-auto pr-2">
+          <div class="overflow-auto pr-2">
             <div class="space-y-2">
-              <button
+              <AButton
                 v-for="g in groups"
                 :key="g.name"
                 @click="selectedGroup = g.name"
+                class="w-full rounded-md border text-left"
                 :class="
-                  selectedGroup === g.name
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-white text-gray-700'
+                  selectedGroup === g.name ? 'bg-indigo-500 text-white' : ''
                 "
-                class="w-full rounded-md border px-3 py-2 text-left"
               >
                 {{ g.displayName }}
-              </button>
+              </AButton>
             </div>
           </div>
         </div>
