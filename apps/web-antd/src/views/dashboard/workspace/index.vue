@@ -25,9 +25,9 @@ import AnalyticsVisitsSource from '../analytics/analytics-visits-source.vue';
 
 const userStore = useUserStore();
 
-// 这是一个示例数据，实际项目中需要根据实际情况进行调整
-// url 也可以是内部路由，在 navTo 方法中识别处理，进行内部跳转
-// 例如：url: /dashboard/workspace
+// This is a sample data, which needs to be adjusted according to the actual situation in actual projects.
+// url It can also be an internal route, which is identified and processed in the navTo method to perform internal jumps.
+// For example: url: /dashboard/workspace
 const projectItems: WorkbenchProjectItem[] = [
   {
     color: '',
@@ -85,7 +85,7 @@ const projectItems: WorkbenchProjectItem[] = [
   },
 ];
 
-// 同样，这里的 url 也可以使用以 http 开头的外部链接
+// Similarly, the url here can also use external links starting with http
 const quickNavItems: WorkbenchQuickNavItem[] = [
   {
     color: '#1fdaca',
@@ -157,12 +157,13 @@ const todoItems = ref<WorkbenchTodoItem[]>([
     title: 'Fixed UI display problem',
   },
 ]);
+
 const trendItems: WorkbenchTrendItem[] = [
   {
     avatar: 'svg:avatar-1',
-    content: `在 <a>开源组</a> 创建了项目 <a>Vue</a>`,
+    content: `Vừa tạo đơn xin nghỉ phép`,
     date: 'just',
-    title: 'William',
+    title: 'Nguyễn Duy Anh',
   },
   {
     avatar: 'svg:avatar-2',
@@ -216,7 +217,7 @@ const trendItems: WorkbenchTrendItem[] = [
 
 const router = useRouter();
 
-// 这是一个示例方法，实际项目中需要根据实际情况进行调整
+// This is an example method, which needs to be adjusted according to the actual situation in the actual project
 // This is a sample method, adjust according to the actual project requirements
 function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
   if (nav.url?.startsWith('http')) {
@@ -239,7 +240,7 @@ function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
       :avatar="userStore.userInfo?.avatar || preferences.app.defaultAvatar"
     >
       <template #title>
-        早安, {{ userStore.userInfo?.realName }}, Start your day's work！
+        Hello, {{ userStore.userInfo?.name }}, Start your day's work！
       </template>
       <template #description> 今日晴，20℃ - 32℃！ </template>
     </WorkbenchHeader>
@@ -247,7 +248,7 @@ function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
     <div class="mt-5 flex flex-col lg:flex-row">
       <div class="mr-4 w-full lg:w-3/5">
         <WorkbenchProject :items="projectItems" title="项目" @click="navTo" />
-        <WorkbenchTrends :items="trendItems" class="mt-5" title="最新动态" />
+        <WorkbenchTrends :items="trendItems" class="mt-5" title="Tin tức mới" />
       </div>
       <div class="w-full lg:w-2/5">
         <WorkbenchQuickNav
