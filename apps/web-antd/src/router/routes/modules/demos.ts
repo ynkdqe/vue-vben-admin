@@ -29,6 +29,14 @@ const routes: RouteRecordRaw[] = [
         path: '/demos/widget',
         component: () => import('#/views/demos/widget/index.vue'),
       },
+      {
+        meta: {
+          title: 'Switch Merchant',
+        },
+        name: 'SwitchMerchantDemos',
+        path: '/demos/switch-merchant',
+        component: () => import('#/views/demos/switch-merchant/index.vue'),
+      },
     ],
   },
 ];
