@@ -16,12 +16,14 @@ import {
   Form,
   Input,
   message,
+  Modal,
   Popconfirm,
   Select,
   Space,
   Table,
   Tag,
 } from 'ant-design-vue';
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons-vue';
 import dayjs from 'dayjs';
 
 import { createContract, fetchContractList } from '#/api/hrms/contract';
@@ -44,6 +46,7 @@ const AButton = Button;
 const ADrawer = Drawer;
 const ATag = Tag;
 const APopconfirm = Popconfirm;
+const AModal = Modal;
 
 interface QueryState {
   keyword?: string;
@@ -319,27 +322,20 @@ const columns = [
           h(
             AButton,
             {
-              type: 'link',
+              type: 'text',
               onClick: () => onEdit(record),
+              title: t('page.contract.index.edit') || 'Sửa',
             },
-            { default: () => t('page.contract.index.edit') || 'Sửa' },
+            { default: () => h(EditOutlined, { style: { color: '#1677ff' } }) },
           ),
           h(
-            APopconfirm,
+            AButton,
             {
-              title: t('page.contract.index.deleteConfirm') || 'Bạn có chắc muốn xóa hợp đồng này không?',
-              onConfirm: () => onDelete(record?.id),
-              okText: t('page.contract.index.delete') || 'Xóa',
-              cancelText: t('page.contract.form.cancel') || 'Hủy',
+              type: 'text',
+              onClick: () => showDeleteConfirm(record?.id),
+              title: t('page.contract.index.delete') || 'Xóa',
             },
-            {
-              default: () =>
-                h(
-                  AButton,
-                  { type: 'link', danger: true },
-                    { default: () => t('page.contract.index.delete') || 'Xóa' },
-                ),
-            },
+            { default: () => h(DeleteOutlined, { style: { color: '#ff4d4f' } }) },
           ),
         ],
       }),
@@ -378,6 +374,18 @@ async function onDelete(id: number | string | undefined) {
   } finally {
     loading.value = false;
   }
+}
+
+function showDeleteConfirm(id: number | string | undefined) {
+  if (!id) return;
+  AModal.confirm({
+    title: t('page.contract.index.deleteConfirm') || 'Bạn có chắc muốn xóa hợp đồng này không?',
+    okText: t('page.contract.index.delete') || 'Xóa',
+    cancelText: t('page.contract.form.cancel') || 'Hủy',
+    async onOk() {
+      await onDelete(id);
+    },
+  });
 }
 </script>
 

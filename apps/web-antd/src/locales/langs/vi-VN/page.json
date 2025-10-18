@@ -20,7 +20,8 @@
     "attendance": "Chấm công",
     "overtime": "Làm thêm giờ",
     "leave": "Nghỉ phép",
-    "contracttype": "Loại hợp đồng"
+    "contracttype": "Loại hợp đồng",
+    "timeshift": "Chấm công"
   },
   "identity": {
     "title": "Quản lý định danh",

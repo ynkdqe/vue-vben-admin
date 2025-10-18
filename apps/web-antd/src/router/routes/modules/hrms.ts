@@ -13,6 +13,15 @@ const routes: RouteRecordRaw[] = [
     },
     children: [
       {
+        name: 'HrmsTimeshift',
+        path: '/hrms/timeshift',
+        component: () => import('#/views/hrms/timeshift/index.vue'),
+        meta: {
+          icon: 'mdi:clock-check-outline',
+          title: $t('page.hrms.timeshift'),
+        },
+      },
+      {
         name: 'HrmsEmployee',
         path: '/hrms/employee',
         component: () => import('#/views/hrms/employee/index.vue'),

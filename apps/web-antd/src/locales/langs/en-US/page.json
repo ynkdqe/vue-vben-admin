@@ -20,7 +20,8 @@
     "attendance": "Attendance",
     "overtime": "Overtime",
     "leave": "Leave",
-    "contracttype": "Contract Type"
+    "contracttype": "Contract Type",
+    "timeshift": "Timeshift"
   },
   "identity": {
     "title": "Identity Management",
