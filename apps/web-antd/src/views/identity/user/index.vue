@@ -352,7 +352,7 @@ onMounted(() => {
               </AForm.Item>
 
               <AForm.Item label="Phone number">
-                <AInput v-model:value="editingUser.phoneNumber" />
+                <AInput v-model:value="editingUser?.phoneNumber" />
               </AForm.Item>
 
               <div class="flex items-center gap-6">
