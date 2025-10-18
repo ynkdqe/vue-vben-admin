@@ -103,8 +103,9 @@ const columns: any[] = [
   {
     title: 'Action',
     key: 'action',
-    width: 140,
     align: 'center',
+    width: 120,
+    fixed: 'right',
     customRender: ({ record }: any) => {
       return h('div', { style: { width: '100%', textAlign: 'center' } }, [
         h(ASpace, null, {

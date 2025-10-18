@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { h, computed, onMounted, reactive, ref, watch } from 'vue';
 import { Button, Form, Grid, Input, Select, Space, Table, Tag, message } from 'ant-design-vue';
 import type { TableColumnsType } from 'ant-design-vue';
 import { fetchSmsTemplateList, type SmsTemplate } from '#/api/sms/template';
 import { fetchSmsProviderList, type SmsProvider } from '#/api/sms/provider';
-
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons-vue';
 const AButton = Button;
 const AForm = Form;
 const AFormItem = Form.Item;
@@ -31,6 +31,35 @@ const columns: TableColumnsType = [
   { title: 'Provider', dataIndex: 'smsProviderId', key: 'smsProviderId', width: 120 },
   { title: 'Nội dung', dataIndex: 'template', key: 'template', ellipsis: true },
   { title: 'Trạng thái', dataIndex: 'isActive', key: 'isActive', width: 140 },
+  {
+    title: 'Action',
+    key: 'action',
+    width: 120,
+    fixed: 'right',
+    align: 'center',
+    customRender: ({ record }: any) => h(ASpace, null, {
+        default: () => [
+          h(
+            AButton,
+            {
+              type: 'text',
+              onClick: () => message.info(`Chức năng sửa chưa được triển khai`),
+              title: 'Sửa',
+            },
+            { default: () => h(EditOutlined, { style: { color: '#1677ff' } }) },
+          ),
+          h(
+            AButton,
+            {
+              type: 'text',
+              onClick: () => message.info(`Chức năng xóa chưa được triển khai`),
+              title: 'Xóa',
+            },
+            { default: () => h(DeleteOutlined, { style: { color: '#ff4d4f' } }) },
+          ),
+        ],
+      }),
+  },
 ];
 
 async function loadData() {

@@ -110,7 +110,8 @@ const columns: TableColumnsType<IdentityUserTableItem> = [
   {
     title: 'Action',
     key: 'action',
-    width: 140,
+    width: 100,
+    align: 'center',
     customRender: ({ record: _record }) => {
       const menuVNode = h(
         AMenu,

@@ -12,6 +12,7 @@ import {
   Table,
   Tag,
 } from 'ant-design-vue';
+import { EditOutlined, DeleteOutlined, ClockCircleOutlined } from '@ant-design/icons-vue';
 
 import {
   createContractType,
@@ -60,7 +61,7 @@ function numberFormatter(v: number | string) {
     .replaceAll(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
-const columns = [
+const columns: any[] = [
   { title: '#', dataIndex: 'id', key: 'id', width: 70 },
   { title: 'Mã', dataIndex: 'code', key: 'code', width: 140 },
   { title: 'Tên loại HĐ', dataIndex: 'name', key: 'name', width: 240 },
@@ -114,28 +115,32 @@ const columns = [
   {
     title: 'Hành động',
     key: 'actions',
-    width: 140,
+    align: 'center',
+    width: 120,
+    fixed: 'right',
     customRender: ({ record }: { record: any }) =>
       h(ASpace, null, {
         default: () => [
           h(
             AButton,
             {
-              type: 'link',
+              type: 'text',
               onClick: () => {
                 editModel.value = record;
                 showCreate.value = true;
               },
+              title: 'Sửa',
             },
-            { default: () => 'Sửa' },
+            { default: () => h(EditOutlined, { style: { color: '#1677ff' } }) },
           ),
           h(
             AButton,
             {
-              type: 'link',
+              type: 'text',
               onClick: () => openDurationsModal(record),
+              title: 'Thời hạn',
             },
-            { default: () => 'Thời hạn' },
+            { default: () => h(ClockCircleOutlined, { style: { color: '#52c41a' } }) },
           ),
           h(
             APopconfirm,
@@ -149,8 +154,8 @@ const columns = [
               default: () =>
                 h(
                   AButton,
-                  { type: 'link', danger: true },
-                  { default: () => 'Xóa' },
+                  { type: 'text', title: 'Xóa' },
+                  { default: () => h(DeleteOutlined, { style: { color: '#ff4d4f' } }) },
                 ),
             },
           ),

@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue';
-import { Button, Form, Grid, Input, Select, Space, Table, Tag, message } from 'ant-design-vue';
+import { computed, onMounted, reactive, ref, watch, h } from 'vue';
+import { Button, Form, Grid, Input, Select, Space, Table, Tag, message, Modal } from 'ant-design-vue';
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons-vue';
 import type { TableColumnsType } from 'ant-design-vue';
 import { fetchSmsProviderList, type SmsProvider } from '#/api/sms/provider';
 import { formatDate } from '@vben/utils';
-
 const AButton = Button;
 const AForm = Form;
 const AFormItem = Form.Item;
@@ -14,6 +14,7 @@ const ASelectOption = Select.Option;
 const ASpace = Space;
 const ATable = Table;
 const ATag = Tag;
+const AModal = Modal;
 
 const screens = Grid.useBreakpoint();
 const isMobile = computed(() => !screens.value?.md);
@@ -32,6 +33,36 @@ const columns: TableColumnsType = [
   { title: 'Người tạo', dataIndex: 'creatorName', key: 'creatorName', width: 160 },
   { title: 'Ngày chỉnh sửa', dataIndex: 'modificationTime', key: 'modificationTime', width: 160, customRender: ({ text }) => formatDate(text, 'DD-MM-YYYY HH:mm:ss') },
   { title: 'Cập nhật bởi', dataIndex: 'modifierName', key: 'modifierName', width: 160 },
+  // action column (fixed right) - compact spacing
+  {
+    title: 'Action',
+    key: 'action',
+    width: 120,
+    fixed: 'right',
+    align: 'center',
+    customRender: ({ record }: any) => h(ASpace, null, {
+        default: () => [
+          h(
+            AButton,
+            {
+              type: 'text',
+              onClick: () => message.info(`Chức năng sửa chưa được triển khai`),
+              title: 'Sửa',
+            },
+            { default: () => h(EditOutlined, { style: { color: '#1677ff' } }) },
+          ),
+          h(
+            AButton,
+            {
+              type: 'text',
+              onClick: () => message.info(`Chức năng xóa chưa được triển khai`),
+              title: 'Xóa',
+            },
+            { default: () => h(DeleteOutlined, { style: { color: '#ff4d4f' } }) },
+          ),
+        ],
+      }),
+  },
 ];
 
 async function loadData() {

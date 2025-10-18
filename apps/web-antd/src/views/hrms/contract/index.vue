@@ -315,7 +315,9 @@ const columns = [
   {
     title: t('page.contract.index.columns.actions') || 'Hành động',
     key: 'actions',
-    width: 140,
+    align: 'center',
+    width: 120,
+    fixed: 'right',
     customRender: ({ record }: { record: any }) =>
       h(ASpace, null, {
         default: () => [
@@ -398,7 +400,7 @@ function showDeleteConfirm(id: number | string | undefined) {
             v-model:value="query.keyword"
             allow-clear
             placeholder="Mã/nhân viên..."
-            style="width: 220px"
+            style="width: 180px"
           />
         </AFormItem>
         <AFormItem label="Trạng thái">
@@ -407,7 +409,7 @@ function showDeleteConfirm(id: number | string | undefined) {
             :multiple="true"
             v-model="query.status"
             placeholder="Chọn trạng thái"
-            style="width: 220px"
+            style="width: 180px"
           />
         </AFormItem>
         <AFormItem label="Loại HĐ">
@@ -415,7 +417,7 @@ function showDeleteConfirm(id: number | string | undefined) {
             :types="contractTypes"
             v-model="query.contractType"
             placeholder="Chọn loại hợp đồng"
-            style="width: 220px"
+            style="width: 130px"
           />
         </AFormItem>
         <AFormItem label="Hiệu lực">
@@ -428,7 +430,7 @@ function showDeleteConfirm(id: number | string | undefined) {
             <ASelect
               v-model:value="query.isActive"
                 :placeholder="t('page.contract.index.effectivePlaceholder') || 'Hiệu lực'"
-              style="width: 140px"
+              style="width: 130px"
             >
                 <ASelect.Option :value="1">{{ t('page.contract.index.effective') || 'Hiệu lực' }}</ASelect.Option>
                 <ASelect.Option :value="0">{{ t('page.contract.index.expired') || 'Hết hạn' }}</ASelect.Option>

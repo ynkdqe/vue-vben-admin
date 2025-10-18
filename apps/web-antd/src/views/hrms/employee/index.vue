@@ -15,7 +15,9 @@ import {
   Space,
   Table,
   Tag,
+  Modal,
 } from 'ant-design-vue';
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons-vue';
 import dayjs from 'dayjs';
 
 import { fetchEmployeeList } from '#/api/core';
@@ -32,6 +34,7 @@ const ASelectOption = Select.Option;
 const ASpace = Space;
 const ATable = Table;
 const ATag = Tag;
+const AModal = Modal;
 
 // Responsive breakpoint
 const screens = Grid.useBreakpoint();
@@ -121,6 +124,39 @@ const columns: TableColumnsType = [
     width: 220,
     ellipsis: true,
     customRender: ({ text }) => text || '-',
+  },
+   {
+    title: 'Action',
+    key: 'action',
+    width: 120,
+    align: 'center',
+    fixed: 'right',
+    customRender: ({ record }: any) => {
+      return h('div', { style: { width: '100%', textAlign: 'center' } }, [
+        h(ASpace, null, {
+          default: () => [
+            h(
+              AButton,
+              {
+                type: 'text',
+                onClick: () => message.info(`Edit ${record?.name || record?.userName}`),
+                title: 'Sửa',
+              },
+              { default: () => h(EditOutlined, { style: { color: '#1677ff' } }) },
+            ),
+            h(
+              AButton,
+              {
+                type: 'text',
+                onClick: () => message.info(`Delete ${record?.name || record?.userName}`),
+                title: 'Xóa',
+              },
+              { default: () => h(DeleteOutlined, { style: { color: '#ff4d4f' } }) },
+            ),
+          ],
+        }),
+      ]);
+    },
   },
 ];
 
