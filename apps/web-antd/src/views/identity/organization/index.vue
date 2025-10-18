@@ -3,7 +3,9 @@ import type { Key } from 'ant-design-vue/es/_util/type';
 
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 
-import { Button, Card, Form, Input, Grid, Space, Tree, Spin } from 'ant-design-vue';
+import { Button, Card, Form, Input, Grid, Space, Tree, Spin, Switch } from 'ant-design-vue';
+import OrganizationTable from '#/components/OrganizationTable.vue';
+import OrganizationTree from '#/components/OrganizationTree.vue';
 
 import { requestClient } from '#/api/request';
 
@@ -16,6 +18,7 @@ const ASpace = Space;
 const AInput = Input;
 const ATree = Tree;
 const ASpin = Spin;
+const ASwitch = Switch;
 
 interface OrgItem {
   id: string;
@@ -114,6 +117,17 @@ const filteredTreeData = computed<OrgTreeNode[]>(() => {
   return filterNodes(treeData.value);
 });
 
+// display mode: 'tree' | 'table'
+const displayMode = ref<'tree' | 'table'>('tree');
+
+// boolean binding for the Switch control
+const isTree = computed<boolean>({
+  get: () => displayMode.value === 'tree',
+  set: (v: boolean) => {
+    displayMode.value = v ? 'tree' : 'table';
+  },
+});
+
 function collectKeys(list: OrgTreeNode[]): Key[] {
   const keys: Key[] = [];
   const stack = [...list];
@@ -209,6 +223,14 @@ function handleReset() {
             <AButton :block="isMobile" @click="handleReset">
               Đặt lại
             </AButton>
+            <div class="flex items-center ml-2">
+              <span class="mr-2">Hiển thị</span>
+              <ASwitch
+                v-model:checked="isTree"
+                :checked-children="'Tree'"
+                :un-checked-children="'Table'"
+              />
+            </div>
           </ASpace>
         </AFormItem>
       </AForm>
@@ -216,27 +238,12 @@ function handleReset() {
 
     <ACard class="shadow-sm">
       <ASpin :spinning="loading">
-        <ATree
-          v-model:expandedKeys="expandedKeys"
-          :auto-expand-parent="autoExpandParent"
-          :tree-data="filteredTreeData"
-          block-node
-          show-line
-          @expand="handleExpand"
-        >
-          <template #title="{ dataRef }">
-            <div class="flex w-full items-center gap-2">
-              <span class="font-medium">{{ dataRef.displayName }}</span>
-              <span v-if="dataRef.code" class="text-xs text-gray-500">({{ dataRef.code }})</span>
-              <span
-                v-if="typeof dataRef.userCount === 'number'"
-                class="ml-auto text-xs text-gray-500"
-              >
-                {{ dataRef.userCount }} thành viên
-              </span>
-            </div>
-          </template>
-        </ATree>
+        <template v-if="displayMode === 'tree'">
+          <OrganizationTree :items="dataSource" />
+        </template>
+        <template v-else>
+          <OrganizationTable :items="dataSource" />
+        </template>
       </ASpin>
     </ACard>
   </div>
