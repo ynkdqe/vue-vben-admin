@@ -1,22 +1,9 @@
 <script lang="ts" setup>
-import type { TableColumnsType } from 'ant-design-vue';
+import type { Key } from 'ant-design-vue/es/_util/type';
 
-import { computed, h, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 
-import { SettingOutlined } from '@ant-design/icons-vue';
-import {
-  Button,
-  Card,
-  Col,
-  Dropdown,
-  Form,
-  Input,
-  Grid,
-  Row,
-  Space,
-  Table,
-  Menu,
-} from 'ant-design-vue';
+import { Button, Card, Form, Input, Grid, Space, Tree, Spin } from 'ant-design-vue';
 
 import { requestClient } from '#/api/request';
 
@@ -25,14 +12,10 @@ const ACard = Card;
 const AForm = Form;
 const AFormItem = Form.Item;
 const AGrid = Grid;
-const ACol = Col;
-const ARow = Row;
 const ASpace = Space;
-const ATable = Table;
-const ADropdown = Dropdown;
-const AMenu = Menu;
-const AMenuItem = Menu.Item;
 const AInput = Input;
+const ATree = Tree;
+const ASpin = Spin;
 
 interface OrgItem {
   id: string;
@@ -43,44 +26,124 @@ interface OrgItem {
 }
 
 const query = reactive({ keyword: '' });
+const keywordFilter = ref('');
 const loading = ref(false);
 const dataSource = ref<OrgItem[]>([]);
 const screens = AGrid.useBreakpoint();
 const isMobile = computed(() => !screens.value?.md);
 
-const columns: TableColumnsType<OrgItem> = [
-  {
-    title: 'Action',
-    key: 'action',
-    width: 140,
-    customRender: ({ record: _record }) => {
-      const menuVNode = h(
-        AMenu,
-        {
-          onClick: (info: any) => handleAction(_record, info.key),
-        },
-        {
-          default: () => [
-            h(AMenuItem, { key: 'edit' }, () => 'Edit'),
-            h(AMenuItem, { key: 'delete' }, () => 'Delete'),
-          ],
-        },
-      );
-
-      return h(ADropdown, { overlay: menuVNode, trigger: ['click'] }, { default: () => h(AButton, { icon: h(SettingOutlined) }) });
-    },
-  },
-  { title: 'Code', dataIndex: 'code', key: 'code' },
-  { title: 'Name', dataIndex: 'displayName', key: 'displayName' },
-  { title: 'Parent', dataIndex: 'parentId', key: 'parentId' },
-  { title: 'User count', dataIndex: 'userCount', key: 'userCount' },
-];
-
-function handleAction(record: OrgItem, key: string) {
-  // placeholder
-  // eslint-disable-next-line no-console
-  console.log('org action', key, record);
+interface OrgTreeNode {
+  key: Key;
+  title: string;
+  displayName: string;
+  code?: string;
+  userCount?: number;
+  children?: OrgTreeNode[];
 }
+
+const expandedKeys = ref<Key[]>([]);
+const autoExpandParent = ref(true);
+
+const treeData = computed<OrgTreeNode[]>(() => {
+  if (!dataSource.value.length) {
+    return [];
+  }
+
+  const nodesMap = new Map<string, OrgTreeNode>();
+  const roots: OrgTreeNode[] = [];
+
+  dataSource.value.forEach((item) => {
+    nodesMap.set(item.id, {
+      key: item.id,
+      title: item.displayName ?? item.code ?? item.id,
+      displayName: item.displayName ?? item.code ?? item.id,
+      code: item.code,
+      userCount: item.userCount,
+      children: [],
+    });
+  });
+
+  dataSource.value.forEach((item) => {
+    const node = nodesMap.get(item.id);
+    if (!node) return;
+    if (item.parentId && nodesMap.has(item.parentId)) {
+      nodesMap.get(item.parentId)!.children!.push(node);
+    } else {
+      roots.push(node);
+    }
+  });
+
+  const pruneEmptyChildren = (list: OrgTreeNode[]) => {
+    list.forEach((node) => {
+      if (node.children && node.children.length > 0) {
+        pruneEmptyChildren(node.children);
+      } else {
+        delete node.children;
+      }
+    });
+  };
+
+  pruneEmptyChildren(roots);
+
+  return roots;
+});
+
+const filteredTreeData = computed<OrgTreeNode[]>(() => {
+  const keyword = keywordFilter.value.trim().toLowerCase();
+  if (!keyword) {
+    return treeData.value;
+  }
+
+  const filterNodes = (nodes: OrgTreeNode[]): OrgTreeNode[] => {
+    const result: OrgTreeNode[] = [];
+    nodes.forEach((node) => {
+      const matchesSelf =
+        node.displayName.toLowerCase().includes(keyword) ||
+        (node.code ? node.code.toLowerCase().includes(keyword) : false);
+      const children = node.children ? filterNodes(node.children) : [];
+      if (matchesSelf || children.length) {
+        result.push({
+          ...node,
+          children: children.length ? children : undefined,
+        });
+      }
+    });
+    return result;
+  };
+
+  return filterNodes(treeData.value);
+});
+
+function collectKeys(list: OrgTreeNode[]): Key[] {
+  const keys: Key[] = [];
+  const stack = [...list];
+  while (stack.length) {
+    const node = stack.shift();
+    if (!node) continue;
+    keys.push(node.key);
+    if (node.children?.length) {
+      stack.push(...node.children);
+    }
+  }
+  return Array.from(new Set(keys));
+}
+
+function handleExpand(keys: Key[]) {
+  expandedKeys.value = keys;
+  autoExpandParent.value = false;
+}
+
+watch(
+  treeData,
+  (nodes) => {
+    if (!nodes.length) {
+      expandedKeys.value = [];
+      return;
+    }
+    expandedKeys.value = collectKeys(nodes);
+  },
+  { immediate: true },
+);
 
 async function loadOrgs() {
   loading.value = true;
@@ -107,13 +170,16 @@ onMounted(() => {
 });
 
 function handleSearch() {
-  // placeholder: re-load list, can be expanded to send query
-  loadOrgs();
+  keywordFilter.value = query.keyword;
+  autoExpandParent.value = true;
+  expandedKeys.value = collectKeys(filteredTreeData.value);
 }
 
 function handleReset() {
   query.keyword = '';
-  loadOrgs();
+  keywordFilter.value = '';
+  autoExpandParent.value = true;
+  expandedKeys.value = collectKeys(treeData.value);
 }
 </script>
 
@@ -127,18 +193,21 @@ function handleReset() {
         @submit.prevent
       >
         <AFormItem label="Từ khóa" :style="isMobile ? { width: '100%' } : {}">
-            <AInput
-              v-model:value="query.keyword"
-              placeholder="Tìm theo tên, mã..."
-              allow-clear
-              :style="isMobile ? { width: '100%' } : { minWidth: '260px' }"
-              @press-enter="handleSearch"
-            />
+          <AInput
+            v-model:value="query.keyword"
+            placeholder="Tìm theo tên, mã..."
+            allow-clear
+            :style="isMobile ? { width: '100%' } : { minWidth: '260px' }"
+            @press-enter="handleSearch"
+          />
         </AFormItem>
-          <AFormItem :style="isMobile ? { width: '100%' } : {}">
+        <AFormItem :style="isMobile ? { width: '100%' } : {}">
           <ASpace :wrap="true" :style="isMobile ? { width: '100%' } : {}">
             <AButton :block="isMobile" type="primary" @click="handleSearch">
               Tìm kiếm
+            </AButton>
+            <AButton :block="isMobile" @click="handleReset">
+              Đặt lại
             </AButton>
           </ASpace>
         </AFormItem>
@@ -146,7 +215,29 @@ function handleReset() {
     </ACard>
 
     <ACard class="shadow-sm">
-      <ATable :columns="columns" :data-source="dataSource" :loading="loading" row-key="id" />
+      <ASpin :spinning="loading">
+        <ATree
+          v-model:expandedKeys="expandedKeys"
+          :auto-expand-parent="autoExpandParent"
+          :tree-data="filteredTreeData"
+          block-node
+          show-line
+          @expand="handleExpand"
+        >
+          <template #title="{ dataRef }">
+            <div class="flex w-full items-center gap-2">
+              <span class="font-medium">{{ dataRef.displayName }}</span>
+              <span v-if="dataRef.code" class="text-xs text-gray-500">({{ dataRef.code }})</span>
+              <span
+                v-if="typeof dataRef.userCount === 'number'"
+                class="ml-auto text-xs text-gray-500"
+              >
+                {{ dataRef.userCount }} thành viên
+              </span>
+            </div>
+          </template>
+        </ATree>
+      </ASpin>
     </ACard>
   </div>
 </template>
