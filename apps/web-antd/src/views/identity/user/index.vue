@@ -5,34 +5,37 @@ import type { IdentityUser } from '#/api/identity';
 
 import { computed, h, onMounted, reactive, ref } from 'vue';
 
+import { formatDate } from '@vben/utils';
+
 import { SettingOutlined } from '@ant-design/icons-vue';
 import {
   Button,
   Card,
-  Col,
   Dropdown,
   Form,
   Grid,
   Input,
+  Menu,
   message,
-  Row,
   Space,
   Table,
+  Drawer,
+  Tabs,
+  Checkbox,
+  Divider,
+  Select,
   Tag,
-  Menu,
 } from 'ant-design-vue';
 
 import { getIdentityUsers } from '#/api/identity';
 
-import { formatDate } from '@vben/utils';
+import Permission from '../../../components/Permission.vue';
 
 const AButton = Button;
 const ACard = Card;
 const AForm = Form;
 const AFormItem = Form.Item;
 const AGrid = Grid;
-const ACol = Col;
-const ARow = Row;
 const AInput = Input;
 const ASpace = Space;
 const ATable = Table;
@@ -40,6 +43,11 @@ const ATag = Tag;
 const ADropdown = Dropdown;
 const AMenu = Menu;
 const AMenuItem = Menu.Item;
+const ADrawer = Drawer;
+const ATabs = Tabs;
+const ACheckbox = Checkbox;
+const ADivider = Divider;
+const ASelect = Select;
 
 interface IdentityUserTableItem extends IdentityUser {
   isActiveText: string;
@@ -58,6 +66,42 @@ const pagination = reactive<TablePaginationConfig>({
 
 const loading = ref(false);
 const dataSource = ref<IdentityUserTableItem[]>([]);
+
+// permission popup state
+const showPermission = ref(false);
+const permissionProviderName = ref('');
+const permissionProviderKey = ref('');
+const permissionTitle = ref('');
+
+// edit drawer state
+const showEditDrawer = ref(false);
+const editingUser = ref<IdentityUser | null>(null);
+const editingSurname = ref('');
+
+function openEditDrawer(user: IdentityUser) {
+  editingUser.value = { ...user };
+  // no surname field on the API; keep a local surname for the UI
+  editingSurname.value = '';
+  showEditDrawer.value = true;
+}
+
+function closeEditDrawer() {
+  showEditDrawer.value = false;
+  editingUser.value = null;
+  editingSurname.value = '';
+}
+
+function saveUserEdits() {
+  // placeholder: call API to save edits. For now, just show a message and close.
+  message.success(`Saved changes for ${editingUser.value?.userName}`);
+  // you may want to merge editingSurname into the payload if backend supports it
+  closeEditDrawer();
+}
+
+function onPermissionSave(payload: { granted: string[] }) {
+  // placeholder: you can call API to persist granted permissions here
+  message.success(`Saved ${payload.granted.length} permissions`);
+}
 
 const screens = AGrid.useBreakpoint();
 const isMobile = computed(() => !screens.value?.md);
@@ -108,7 +152,6 @@ const columns: TableColumnsType<IdentityUserTableItem> = [
         ? h(ATag, { color: 'green' }, () => 'Active')
         : h(ATag, { color: 'red' }, () => 'Inactive');
     },
-    
   },
   {
     title: 'Locked',
@@ -122,7 +165,11 @@ const columns: TableColumnsType<IdentityUserTableItem> = [
         : h(ATag, { color: 'green' }, () => 'Unlocked');
     },
   },
-  { title: 'Failed logins', dataIndex: 'accessFailedCount', key: 'accessFailedCount', width: 120,
+  {
+    title: 'Failed logins',
+    dataIndex: 'accessFailedCount',
+    key: 'accessFailedCount',
+    width: 120,
     customRender: ({ record: _record }) => {
       const locked = _record.lockoutEnabled;
       return locked
@@ -130,15 +177,30 @@ const columns: TableColumnsType<IdentityUserTableItem> = [
         : h(ATag, { color: 'green' }, () => 'Unlocked');
     },
   },
-  { title: 'Failed logins', dataIndex: 'accessFailedCount', key: 'accessFailedCount', width: 120, },
-  { title: 'Creation Time', dataIndex: 'creationTime', key: 'creationTime',
+  {
+    title: 'Failed logins',
+    dataIndex: 'accessFailedCount',
+    key: 'accessFailedCount',
+    width: 120,
+  },
+  {
+    title: 'Creation Time',
+    dataIndex: 'creationTime',
+    key: 'creationTime',
     customRender: ({ record: _record }) => {
-      return h(ATag, { color: 'blue' }, () => formatDate(_record.creationTime,'DD-MM-YYYY HH:mm:ss'));
+      return h(ATag, { color: 'blue' }, () =>
+        formatDate(_record.creationTime, 'DD-MM-YYYY HH:mm:ss'),
+      );
     },
   },
-  { title: 'Last Modification Time', dataIndex: 'lastModificationTime', key: 'lastModificationTime',
+  {
+    title: 'Last Modification Time',
+    dataIndex: 'lastModificationTime',
+    key: 'lastModificationTime',
     customRender: ({ record: _record }) => {
-      return h(ATag, { color: 'blue' }, () => formatDate(_record.lastModificationTime ?? '','DD-MM-YYYY HH:mm:ss'));
+      return h(ATag, { color: 'blue' }, () =>
+        formatDate(_record.lastModificationTime ?? '', 'DD-MM-YYYY HH:mm:ss'),
+      );
     },
   },
 ];
@@ -146,26 +208,39 @@ const columns: TableColumnsType<IdentityUserTableItem> = [
 function handleAction(record: IdentityUserTableItem, key: string) {
   // basic scaffold for handling actions from the settings menu
   switch (key) {
-    case 'edit':
-      message.info(`Edit ${record.userName}`);
-      break;
-    case 'permission':
-      message.info(`Permission ${record.userName}`);
-      break;
-    case 'setPassword':
-      message.info(`Set password for ${record.userName}`);
-      break;
-    case 'lock':
-      message.info(`Lock ${record.userName}`);
-      break;
-    case 'loginAs':
-      message.info(`Log in as ${record.userName}`);
-      break;
-    case 'delete':
+    case 'delete': {
       message.info(`Delete ${record.userName}`);
       break;
-    default:
+    }
+    case 'edit': {
+      // open edit drawer with tabs (User Information, Roles, Organization units)
+      openEditDrawer(record as IdentityUser);
+      break;
+    }
+    case 'lock': {
+      message.info(`Lock ${record.userName}`);
+      break;
+    }
+    case 'loginAs': {
+      message.info(`Log in as ${record.userName}`);
+      break;
+    }
+    case 'permission': {
+      // open permission modal for this user
+      // providerName = 'U', providerKey = record.id
+      permissionProviderName.value = 'U';
+      permissionProviderKey.value = (record.id as string) || String(record.id);
+      permissionTitle.value = `Permissions - ${record.userName}`;
+      showPermission.value = true;
+      break;
+    }
+    case 'setPassword': {
+      message.info(`Set password for ${record.userName}`);
+      break;
+    }
+    default: {
       message.info(`Action ${key} on ${record.userName}`);
+    }
   }
 }
 
@@ -196,13 +271,6 @@ function handleSearch() {
   loadUsers();
 }
 
-function handleReset() {
-  query.keyword = '';
-  pagination.current = 1;
-  pagination.pageSize = 10;
-  loadUsers();
-}
-
 function handleTableChange(pager: TablePaginationConfig) {
   pagination.current = pager.current ?? 1;
   pagination.pageSize = pager.pageSize ?? 10;
@@ -224,15 +292,15 @@ onMounted(() => {
         @submit.prevent
       >
         <AFormItem label="Từ khóa" :style="isMobile ? { width: '100%' } : {}">
-            <AInput
-              v-model:value="query.keyword"
-              placeholder="Tìm theo tên, mã, email..."
-              allow-clear
-              :style="isMobile ? { width: '100%' } : { minWidth: '260px' }"
-              @press-enter="handleSearch"
-            />
+          <AInput
+            v-model:value="query.keyword"
+            placeholder="Tìm theo tên, mã, email..."
+            allow-clear
+            :style="isMobile ? { width: '100%' } : { minWidth: '260px' }"
+            @press-enter="handleSearch"
+          />
         </AFormItem>
-          <AFormItem :style="isMobile ? { width: '100%' } : {}">
+        <AFormItem :style="isMobile ? { width: '100%' } : {}">
           <ASpace :wrap="true" :style="isMobile ? { width: '100%' } : {}">
             <AButton :block="isMobile" type="primary" @click="handleSearch">
               Tìm kiếm
@@ -253,5 +321,77 @@ onMounted(() => {
         @change="handleTableChange"
       />
     </ACard>
+    <Permission
+      v-model="showPermission"
+      :provider-name="permissionProviderName"
+      :provider-key="permissionProviderKey"
+      :title="permissionTitle"
+      @save="onPermissionSave"
+    />
+    <ADrawer v-model:open="showEditDrawer" width="720px" :title="editingUser?.userName ? 'Edit - ' + editingUser.userName : 'Edit'">
+      <ATabs defaultActiveKey="1">
+        <ATabs.TabPane key="1" tab="User Information">
+          <div class="space-y-4 p-4">
+            <AForm layout="vertical" :model="editingUser">
+              <AForm.Item label="User name *">
+                <AInput v-model:value="editingUser.userName" />
+              </AForm.Item>
+
+              <div class="grid grid-cols-2 gap-4">
+                <AForm.Item label="Name">
+                  <AInput v-model:value="editingUser.name" />
+                </AForm.Item>
+                <AForm.Item label="Surname">
+                  <AInput v-model:value="editingSurname" />
+                </AForm.Item>
+              </div>
+
+              <AForm.Item label="Email address *">
+                <AInput v-model:value="editingUser.email" />
+              </AForm.Item>
+
+              <AForm.Item label="Phone number">
+                <AInput v-model:value="editingUser.phoneNumber" />
+              </AForm.Item>
+
+              <div class="flex items-center gap-6">
+                <ACheckbox v-model:checked="editingUser.isActive">Active</ACheckbox>
+                <ACheckbox v-model:checked="editingUser.lockoutEnabled">Account lockout</ACheckbox>
+              </div>
+
+              <div class="flex items-center gap-6 mt-2">
+                <ACheckbox> Email confirmed </ACheckbox>
+                <ACheckbox> Phone number confirmed </ACheckbox>
+              </div>
+
+              <div class="mt-2">
+                <ACheckbox> Force password change </ACheckbox>
+              </div>
+            </AForm>
+          </div>
+        </ATabs.TabPane>
+
+        <ATabs.TabPane key="2" tab="Roles (1)">
+          <div class="p-4">
+            <!-- roles list placeholder: should load roles for user -->
+            <p>Roles for user will appear here.</p>
+          </div>
+        </ATabs.TabPane>
+
+        <ATabs.TabPane key="3" tab="Organization units (1)">
+          <div class="p-4">
+            <!-- organization units placeholder: should load org units for user -->
+            <p>Organization units for user will appear here.</p>
+          </div>
+        </ATabs.TabPane>
+      </ATabs>
+
+      <template #footer>
+        <div class="flex justify-end gap-3">
+          <AButton @click="closeEditDrawer">Cancel</AButton>
+          <AButton type="primary" @click="saveUserEdits">Save</AButton>
+        </div>
+      </template>
+    </ADrawer>
   </div>
 </template>
